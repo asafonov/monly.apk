@@ -1,11 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html ontouchmove> 
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Monly</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel=stylesheet type=text/css href="style.css">
+  <script src="main.js"></script>
 </head>
-<body style="font-family: monospace">
-    REPLACE THIS FILE WITH YOUR OWN INDEX.HTML
-</body>
+
+<body id="main_page">
+  <!-- top -->
+  <div class="row top wrap">
+    <div class="logo svg"></div> 
+    <div class="menu ico_container">
+      <div class="menu_cards svg"></div>
+      <div class="menu_charts svg"></div>
+      <div class="menu_bills svg"></div>
+      <div class="menu_settings svg"></div>
+    </div>  
+  </div>
+  <!-- /top -->
+  <div class="row content no_filter clear">
+    <!-- section -->
+    <div class="section wrap accounts">
+      <h1>accounts</h1>
+      <div class="number big">120,603.44</div>
+      <div class="add">add account</div>
+    </div>
+    <!-- /section -->
+
+<!-- select simple 
+    <div class="select select_green" id="opened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap">
+          <div class="opt">select month</div>
+          <div class="opt">select period</div>
+        </div>    
+    </div>
+ -->
+    
+<!-- select month -->
+    <!--<div class="select select_green" id="opened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap">
+          <div class="opt year">2020</div>
+          <div class="row">
+            <div class="opt">jan</div>
+            <div class="opt">feb</div>
+            <div class="opt">mar</div>
+            <div class="opt">apr</div>
+            <div class="opt">may</div>
+            <div class="opt">jun</div>
+          </div>
+          <div class="row">  
+            <div class="opt">jul</div>
+            <div class="opt">aug</div>
+            <div class="opt">sep</div>
+            <div class="opt">oct</div>
+            <div class="opt">nov</div>
+            <div class="opt">dec</div>
+          </div>
+          
+        </div>    
+    </div>-->
+
+
+<!-- select inputs
+    <div class="select select_green" id="opened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap inputs">
+          <div class="row">
+            <div class="opt">from</div>
+            <div class="opt" contenteditable=""></div>
+          </div>
+          <div class="row">  
+            <div class="opt">to</div>
+            <div class="opt" contenteditable=""></div>
+          </div>         
+        </div>    
+    </div>
+-->
+
+    <!-- section -->
+    <div class="section wrap no_add">
+      <h1>review</h1>
+      <div class="item">
+        <div>Income</div>
+        <div class="number income">100.00</div>
+      </div>
+      <div class="item">
+        <div>Expense</div>
+        <div class="number expense">54.00</div>
+      </div>
+    </div>
+    <!-- /section -->
+
+    <!-- section -->
+    <!--<div class="section wrap with_left">
+      <h1>budgets</h1>
+      <div class="number big">7,278.00</div>
+      <div class="item" id="budget_1">
+        <div class="row">
+          <div>За квартиру</div>
+          <div class="number with_left">3,500.00</div>
+        </div>
+        <div class="row number dual">10,000.00 <span>13,500.00</span></div>
+        <div class="row progress_line">
+          <div class="filled"></div>
+        </div>
+      </div>
+      <div class="item" id="budget_2">
+        <div class="row">
+          <div>Управляющей</div>
+          <div class="number with_left">457.44</div>
+        </div>
+        <div class="row number dual">3,000.00<span>3,457.44</span></div>
+        <div class="row progress_line">
+          <div class="filled"></div>
+        </div>
+      </div>
+      <div class="add">add budget</div>
+    </div>-->
+    <!-- /section -->
+
+    <!-- section -->
+    <div class="section wrap transactions">
+      <h1>transactions</h1>
+      <!-- item -->
+      <div class="item">
+        <div class="row">
+          <div class="first_coll">20 aug 2020</div>
+          <div class="second_coll small">Яндекс.Деньги</div>
+          <div class="third_coll number">120,000,000.00</div>
+        </div>
+        <div class="row">
+          <div class="first_coll small">Перекресток</div>
+          <div class="second_coll small light">groceries</div>
+          <div class="third_coll ico_container">
+            <div class="trans_expense svg light"></div>
+            <div class="trans_scan svg light"></div>
+          </div>
+        </div>
+      </div>
+      <!-- /item -->
+      <!-- item -->
+      <div class="item">
+        <div class="row">
+          <div class="first_coll">19 aug 2020</div>
+          <div class="second_coll small">Cash</div>
+          <div class="third_coll number">567.35</div>
+        </div>
+        <div class="row">
+          <div class="first_coll small"></div>
+          <div class="second_coll small light">investment</div>
+          <div class="third_coll ico_container">
+            <div class="trans_transfer svg light"></div>
+          </div>
+        </div>
+      </div>
+      <!-- /item -->
+      <!-- item -->
+      <div class="item">
+        <div class="row">
+          <div class="first_coll">19 aug 2020</div>
+          <div class="second_coll small">Яндекс.Деньги</div>
+          <div class="third_coll number">567.35</div>
+        </div>
+        <div class="row">
+          <div class="first_coll small">Лента</div>
+          <div class="second_coll small light">groceries</div>
+          <div class="third_coll ico_container">
+            <div class="trans_expense svg light"></div>
+          </div>
+        </div>
+      </div>
+      <!-- /item -->
+      <!-- item -->
+      <div class="item">
+        <div class="row">
+          <div class="first_coll">19 aug 2020</div>
+          <div class="second_coll small">alfa bank</div>
+          <div class="third_coll number">10,000.00</div>
+        </div>
+        <div class="row">
+          <div class="first_coll small"></div>
+          <div class="second_coll small light">gift</div>
+          <div class="third_coll ico_container">
+            <div class="trans_income svg light"></div>
+          </div>
+        </div>
+      </div>
+      <!-- /item -->
+<!-- step_1 
+      <div class="item add_item step_1">
+        <div class="row">
+          <div class="action">
+            <div class="trans_scan svg"></div>
+            <span class="small">Scan</span>
+          </div>
+          <div class="action">
+            <div class="trans_expense svg"></div>
+            <span class="small">expense</span>
+          </div>
+          <div class="action">
+            <div class="trans_income svg"></div>
+            <span class="small">income</span>
+          </div>
+          <div class="action">
+            <div class="trans_transfer svg"></div>
+            <span class="small">transfer</span>
+          </div>
+        </div>
+      </div>
+-->
+<!-- step_2 -->
+      <div class="item add_item step_2">
+        <div class="row">
+          <div class="first_coll light">19 aug 2020</div>
+          <div class="second_coll small">
+            <!-- select simple -->
+            <div class="select select_white" id="opened_money">
+                <div class="active small light">Яндекс.Деньги</div>
+                <div class="options wrap">
+                  <div class="opt small">Cash</div>
+                  <div class="opt small">alfa bank</div>
+                </div>    
+            </div>
+            <!-- /select simple -->
+          </div>
+          <div class="third_coll number light">10,000.00</div>
+        </div>
+        <div class="row">
+          <div class="first_coll small light">Place</div>
+          <div class="second_coll small">
+            <!-- select simple -->
+            <div class="select select_white" id="pened_category">
+                <div class="active small light">Gift</div>
+                <div class="options wrap">
+                  <div class="opt small">groceries</div>
+                  <div class="opt small">auto gas</div>
+                  <div class="opt small">travels</div>
+                </div>    
+            </div>
+            <!-- /select simple -->
+          </div>
+          <div class="third_coll ico_container">
+            <div class="trans_income svg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="add">add transaction</div>
+    </div>
+    <!-- /section -->
+
+    <!--<div class="pay">
+      <div class="svg"></div>
+    </div>-->
+  </div>
+</body>    
 </html>
