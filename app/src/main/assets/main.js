@@ -134,10 +134,10 @@ class Transactions {
     this.store();
   }
   expense() {
-    return this.sum(i => i > 0);
+    return this.sum(i => i.amount > 0);
   }
   income() {
-    return Math.abs(this.sum(i => i < 0));
+    return Math.abs(this.sum(i => i.amount < 0));
   }
   sum (func) {
     return this.list.filter(v => func(v)).map(v => v.amount).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
