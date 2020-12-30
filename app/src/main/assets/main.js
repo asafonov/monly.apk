@@ -33,6 +33,41 @@ class AbstractList {
     window.localStorage.setItem(this.constructor.name, JSON.stringify(this.list));
   }
 }
+class AbstractPeriodList {
+  constructor (year, month, prefix) {
+    const today = new Date();
+    this.year = today.getFullYear() || year;
+    this.month = asafonov.utils.padlen((today.getMonth() + 1 || month).toString(), 2, '0');
+    this.name = prefix + this.year + this.month;
+    this.initList();
+  }
+  initList() {
+    if (this.list === null || this.list === undefined) {
+      this.list = JSON.parse(window.localStorage.getItem(this.name)) || [];
+    }
+  }
+  getList() {
+    return this.list;
+  }
+  addItem (item, event) {
+    this.list.push(item);
+    this.store();
+    if (event) asafonov.messageBus.send(event, {id: this.list.length - 1, to: item, from: null});
+  }
+  updateItem (id, item, event) {
+    const oldItem = {...this.list[id]};
+    this.list[id] = {...this.list[id], ...item};
+    this.store();
+    if (event) asafonov.messageBus.send(event, {id: id, to: this.list[id], from: oldItem});
+  }
+  deleteItem (id) {
+    this.list.splice(id, 1);
+    this.store();
+  }
+  store() {
+    window.localStorage.setItem(this.name, JSON.stringify(this.list));
+  }
+}
 class Accounts extends AbstractList {
   updateItem (id, item) {
     const from = this.list[id];
@@ -45,6 +80,17 @@ class Accounts extends AbstractList {
   }
   purchase (id, amount) {
     this.updateItem(id, this.list[id] + amount);
+  }
+}
+class Budgets extends AbstractPeriodList {
+  constructor (year, month) {
+    super(year, month, 'budgets_');
+  }
+  addItem (item) {
+    super.addItem(item, asafonov.events.BUDGET_UPDATED);
+  }
+  updateItem (id, item) {
+    super.updateItem(id, item, asafonov.events.BUDGET_UPDATED);
   }
 }
 class MessageBus {
@@ -85,21 +131,9 @@ class MessageBus {
     this.subscribers = null;
   }
 }
-class Transactions {
+class Transactions extends AbstractPeriodList {
   constructor (year, month) {
-    const today = new Date();
-    this.year = today.getFullYear() || year;
-    this.month = asafonov.utils.padlen((today.getMonth() + 1 || month).toString(), 2, '0');
-    this.name = this.year + this.month;
-    this.initList();
-  }
-  initList() {
-    if (this.list === null || this.list === undefined) {
-      this.list = JSON.parse(window.localStorage.getItem(this.name)) || [];
-    }
-  }
-  getList() {
-    return this.list;
+    super(year, month, '');
   }
   assignType (amount) {
     return amount >= 0 ? 'expense' : 'income';
@@ -119,19 +153,13 @@ class Transactions {
     this.addItem(item);
   }
   addItem (item) {
-    this.list.push(item);
-    this.store();
-    asafonov.messageBus.send(asafonov.events.TRANSACTION_UPDATED, {id: this.list.length - 1, to: item, from: null});
+    super.addItem(item, asafonov.events.TRANSACTION_UPDATED);
   }
   updateItem (id, item) {
-    const oldItem = {...this.list[id]};
-    this.list[id] = {...this.list[id], ...item};
-    this.store();
-    asafonov.messageBus.send(asafonov.events.TRANSACTION_UPDATED, {id: id, to: this.list[id], from: oldItem});
+    super.updateItem(id, item, asafonov.events.TRANSACTION_UPDATED);
   }
   deleteItem (id) {
-    this.list.splice(id, 1);
-    this.store();
+    super.deleteItem(id);
   }
   expense() {
     return this.sum(i => i.amount > 0);
@@ -141,9 +169,6 @@ class Transactions {
   }
   sum (func) {
     return this.list.filter(v => func(v)).map(v => v.amount).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-  }
-  store() {
-    window.localStorage.setItem(this.name, JSON.stringify(this.list));
   }
 }
 class Utils {
@@ -308,6 +333,7 @@ class AccountsView {
 class TransactionsView {
   constructor() {
     this.listElement = document.querySelector('.transactions');
+    this.headerElement = this.listElement.querySelector('h1');
     this.addButton = this.listElement.querySelector('.add');
     this.incomeElement = document.querySelector('.income');
     this.expenseElement = document.querySelector('.expense');
@@ -432,7 +458,7 @@ class TransactionsView {
     ico.classList.add('trans_' + item.type);
     icoDiv.appendChild(ico);
     itemDiv.appendChild(row2);
-    if (! itemAdded) this.listElement.insertBefore(itemDiv, this.addButton);
+    if (! itemAdded) this.headerElement.after(itemDiv);
   }
   updateList() {
     this.clearExistingItems();
@@ -457,10 +483,14 @@ window.asafonov.messageBus = new MessageBus();
 window.asafonov.events = {
   ACCOUNT_UPDATED: 'accountUpdated',
   ACCOUNT_RENAMED: 'accountRenamed',
-  TRANSACTION_UPDATED: 'transactionUpdated'
+  TRANSACTION_UPDATED: 'transactionUpdated',
+  BUDGET_UPDATED: 'budgetUpdated'
 };
 window.asafonov.settings = {
 };
+window.onerror = (msg, url, line) => {
+  alert(`${msg} on line ${line}`);
+}
 document.addEventListener("DOMContentLoaded", function (event) {
   asafonov.accounts = new Accounts(
     {Account1: 300000, Account2: 4142181} // test data
