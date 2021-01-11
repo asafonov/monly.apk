@@ -34,16 +34,17 @@ class AbstractList {
   }
 }
 class AbstractPeriodList {
-  constructor (year, month, prefix) {
+  constructor (year, month, prefix, event) {
     const today = new Date();
-    this.year = today.getFullYear() || year;
-    this.month = asafonov.utils.padlen((today.getMonth() + 1 || month).toString(), 2, '0');
+    this.year = year || today.getFullYear();
+    this.month = asafonov.utils.padlen((month || today.getMonth() + 1).toString(), 2, '0');
     this.name = prefix + this.year + this.month;
-    this.initList();
+    this.initList(event);
   }
-  initList() {
+  initList (event) {
     if (this.list === null || this.list === undefined) {
       this.list = JSON.parse(window.localStorage.getItem(this.name)) || [];
+      if (event) asafonov.messageBus.send(event, {list: this});
     }
   }
   getList() {
@@ -82,15 +83,15 @@ class Accounts extends AbstractList {
     this.updateItem(id, this.list[id] + amount);
   }
 }
-class Budgets extends AbstractPeriodList {
-  constructor (year, month) {
-    super(year, month, 'budgets_');
-  }
-  addItem (item) {
-    super.addItem(item, asafonov.events.BUDGET_UPDATED);
-  }
+class Budgets extends AbstractList {
   updateItem (id, item) {
-    super.updateItem(id, item, asafonov.events.BUDGET_UPDATED);
+    const from = this.list[id];
+    super.updateItem(id, item);
+    asafonov.messageBus.send(asafonov.events.BUDGET_UPDATED, {id: id, from: from, to: item});
+  }
+  updateId (id, newid) {
+    super.updateId(id, newid);
+    asafonov.messageBus.send(asafonov.events.BUDGET_RENAMED, {item: this.list[newid], from: id, to: newid});
   }
 }
 class MessageBus {
@@ -133,7 +134,7 @@ class MessageBus {
 }
 class Transactions extends AbstractPeriodList {
   constructor (year, month) {
-    super(year, month, '');
+    super(year, month, '', asafonov.events.TRANSACTIONS_LOADED);
   }
   assignType (amount) {
     return amount >= 0 ? 'expense' : 'income';
@@ -166,6 +167,9 @@ class Transactions extends AbstractPeriodList {
   }
   income() {
     return Math.abs(this.sum(i => i.amount < 0));
+  }
+  sumByTag (tag) {
+    return this.sum(i => i.tag === tag);
   }
   sum (func) {
     return this.list.filter(v => func(v)).map(v => v.amount).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
@@ -330,6 +334,164 @@ class AccountsView {
     this.listElement = null;
   }
 }
+class BudgetsView {
+  constructor() {
+    this.model = new Budgets();
+    this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this);
+    this.onTitleChangedProxy = this.onTitleChanged.bind(this);
+    this.onValueChangedProxy = this.onValueChanged.bind(this);
+    this.listElement = document.querySelector('.budgets');
+    this.addButton = this.listElement.querySelector('.add');
+    this.totalElement = this.listElement.querySelector('.number.big');
+    this.addEventListeners();
+  }
+  addEventListeners() {
+    this.updateEventListeners(true);
+  }
+  removeEventListeners() {
+    this.updateEventListeners();
+  }
+  updateEventListeners (add) {
+    this.addButton[add ? 'addEventListener' : 'removeEventListener']('click', this.onAddButtonClickedProxy);
+    asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.BUDGET_UPDATED, this, 'onBudgetUpdated');
+    asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.BUDGET_RENAMED, this, 'onBudgetRenamed');
+    asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTIONS_LOADED, this, 'onTransactionsLoaded');
+  }
+  onAddButtonClicked() {
+    const name = 'Budget' + Math.floor(Math.random() * 1000)
+    this.model.updateItem(name, 0);
+  }
+  onBudgetUpdated (event) {
+    this.renderItem(event.id, event.to);
+    this.updateTotal();
+  }
+  onBudgetRenamed (event) {
+    const oldId = this.genItemId(event.from);
+    const newId = this.genItemId(event.to);
+    document.querySelector(`#${oldId}`).id = newId;
+    this.renderItem(event.to, event.item);
+  }
+  onTransactionsLoaded (event) {
+    const list = this.model.getList();
+    for (let tag in list) {
+      this.updateBudgetCompletion(tag, event.list.sumByTag(tag));
+    }
+  }
+  updateBudgetCompletion (tag, sum) {
+    const itemId = this.genItemId(tag);
+    const item = this.listElement.querySelector(`#${itemId}`);
+    const budget = asafonov.utils.displayMoney(this.model.getItem(tag));
+    const left = asafonov.utils.displayMoney(this.model.getItem(tag) - sum);
+    const spent = asafonov.utils.displayMoney(sum);
+    item.querySelector(`.number.with_left`).innerHTML = left;
+    item.querySelector('.row.number.dual').innerText = `${spent} `;
+    const v = document.createElement('span');
+    v.setAttribute('contenteditable', 'true');
+    v.innerHTML = budget;
+    v.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')));
+    v.addEventListener('blur', this.onValueChangedProxy);
+    item.querySelector('.row.number.dual').appendChild(v);
+    const width = Math.min(100, parseInt(sum / this.model.getItem(tag) * 100)) || 100;
+    item.querySelector('.filled').style.width = `${width}%`;
+  }
+  clearExistingItems() {
+    const items = this.listElement.querySelectorAll('.item');
+    for (let i = 0; i < items.length; ++i) {
+      this.listElement.removeChild(items[i]);
+    }
+  }
+  genItemId (name) {
+    return `budget_${name}`;
+  }
+  renderItem (name, amount) {
+    let itemExists = true;
+    const itemId = this.genItemId(name);
+    let item = this.listElement.querySelector(`#${itemId}`);
+    if (! item) {
+      item = document.createElement('div');
+      itemExists = false;
+      item.id = itemId;
+      item.className = 'item';
+    }
+    item.innerHTML = '';
+    const displayAmount = asafonov.utils.displayMoney(amount);
+    const displayZero = asafonov.utils.displayMoney(0);
+    const row = document.createElement('div');
+    row.className = 'row';
+    const n = document.createElement('div');
+    n.className = 'budget_name';
+    n.innerHTML = name;
+    n.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')));
+    n.addEventListener('blur', this.onTitleChangedProxy);
+    n.setAttribute('contenteditable', 'true');
+    row.appendChild(n);
+    const a = document.createElement('div');
+    a.className = 'number with_left';
+    a.innerHTML = displayAmount;
+    row.appendChild(a);
+    item.appendChild(row);
+    const row2 = document.createElement('div');
+    row2.className = 'row number dual';
+    row2.innerHTML = `${displayZero} `;
+    const v = document.createElement('span');
+    v.innerHTML = displayAmount;
+    row2.appendChild(v);
+    item.appendChild(row2);
+    const row3 = document.createElement('div');
+    row3.className = 'row progress_line';
+    row3.innerHTML = '<div class="filled"></div>';
+    item.appendChild(row3);
+    if (! itemExists) {
+      this.listElement.insertBefore(item, this.addButton);
+    }
+  }
+  onTitleChanged (event) {
+    const title = event.currentTarget;
+    const newValue = title.innerText.replace(/\n/g, '');
+    const originalValue = title.getAttribute('data-content');
+    if (newValue !== originalValue) {
+      if (newValue.length > 0) {
+        this.model.updateId(originalValue, newValue);
+      } else {
+        this.model.deleteItem(originalValue);
+        this.updateList();
+      }
+    }
+  }
+  onValueChanged (event) {
+    const value = event.currentTarget;
+    const title = value.parentNode.parentNode.querySelector('.budget_name');
+    const newValue = value.innerText.replace(/\n/g, '');
+    const originalValue = value.getAttribute('data-content');
+    if (newValue !== originalValue) {
+      const amount = parseInt(parseFloat(newValue) * 100);
+      this.model.updateItem(title.innerHTML, amount);
+    }
+  }
+  updateList() {
+    this.clearExistingItems();
+    const list = this.model.getList();
+    this.updateTotal();
+    for (let key in list) {
+      this.renderItem(key, list[key]);
+    }
+  }
+  updateTotal() {
+    const list = this.model.getList();
+    let total = 0;
+    for (let key in list) {
+      total += list[key];
+    }
+    this.totalElement.innerHTML = asafonov.utils.displayMoney(total);
+  }
+  destroy() {
+    this.removeEventListeners();
+    this.model.destroy();
+    this.addButton = null;
+    this.listElement = null;
+    this.totalElement = null;
+  }
+}
 class TransactionsView {
   constructor() {
     this.listElement = document.querySelector('.transactions');
@@ -484,7 +646,9 @@ window.asafonov.events = {
   ACCOUNT_UPDATED: 'accountUpdated',
   ACCOUNT_RENAMED: 'accountRenamed',
   TRANSACTION_UPDATED: 'transactionUpdated',
-  BUDGET_UPDATED: 'budgetUpdated'
+  BUDGET_UPDATED: 'budgetUpdated',
+  BUDGET_RENAMED: 'budgetRenamed',
+  TRANSACTIONS_LOADED: 'transactionsLoaded'
 };
 window.asafonov.settings = {
 };
@@ -494,10 +658,12 @@ window.onerror = (msg, url, line) => {
 document.addEventListener("DOMContentLoaded", function (event) {
   asafonov.accounts = new Accounts(
     {Account1: 300000, Account2: 4142181} // test data
-  )
+  );
   const accountsController = new AccountsController();
   const accountsView = new AccountsView();
   accountsView.updateList();
+  const budgetsView = new BudgetsView();
+  budgetsView.updateList();
   const transactionsView = new TransactionsView();
   transactionsView.updateList();
 });

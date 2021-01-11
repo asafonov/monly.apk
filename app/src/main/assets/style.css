@@ -328,10 +328,6 @@ h1 {
   left: 0;
 }
 
-.progress_line .filled {
-  width: 20%;
-}
-
 .progress_line .filled,
 .progress_line::after {
   height: var(--height_0);
@@ -345,13 +341,6 @@ h1 {
   position: absolute;
   width: 100%;
   opacity: 0.2;
-}
-
-#budget_1 .filled {
-  width: 20%;
-}
-#budget_2 .filled {
-  width: 40%;
 }
 
 .section.transactions .item * {
