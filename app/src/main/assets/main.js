@@ -337,6 +337,7 @@ class AccountsView {
 class BudgetsView {
   constructor() {
     this.model = new Budgets();
+    this.transactions = null;
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this);
     this.onTitleChangedProxy = this.onTitleChanged.bind(this);
     this.onValueChangedProxy = this.onValueChanged.bind(this);
@@ -356,6 +357,7 @@ class BudgetsView {
     asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.BUDGET_UPDATED, this, 'onBudgetUpdated');
     asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.BUDGET_RENAMED, this, 'onBudgetRenamed');
     asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTIONS_LOADED, this, 'onTransactionsLoaded');
+    asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated');
   }
   onAddButtonClicked() {
     const name = 'Budget' + Math.floor(Math.random() * 1000)
@@ -373,8 +375,20 @@ class BudgetsView {
   }
   onTransactionsLoaded (event) {
     const list = this.model.getList();
+    this.transactions = event.list;
+    this.updateTotal();
     for (let tag in list) {
       this.updateBudgetCompletion(tag, event.list.sumByTag(tag));
+    }
+  }
+  onTransactionUpdated (event) {
+    let affectedTags = [event.to.tag];
+    event.from && event.from.tag !== event.to.tag && (affectedTags.push(event.from.tag));
+    for (let i = 0; i < affectedTags.length; ++i) {
+      if (this.model.getItem(affectedTags[i]) !== undefined) {
+        this.updateBudgetCompletion(affectedTags[i], this.transactions.sumByTag(affectedTags[i]));
+        this.updateTotal();
+      }
     }
   }
   updateBudgetCompletion (tag, sum) {
@@ -471,7 +485,6 @@ class BudgetsView {
   updateList() {
     this.clearExistingItems();
     const list = this.model.getList();
-    this.updateTotal();
     for (let key in list) {
       this.renderItem(key, list[key]);
     }
@@ -480,7 +493,7 @@ class BudgetsView {
     const list = this.model.getList();
     let total = 0;
     for (let key in list) {
-      total += list[key];
+      total += list[key] - this.transactions.sumByTag(key);
     }
     this.totalElement.innerHTML = asafonov.utils.displayMoney(total);
   }
