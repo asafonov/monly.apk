@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html ontouchmove> 
+
+<head>
+  <title>Monly</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel=stylesheet type=text/css href="style.css">
+  <script src="main.js"></script>
+</head>
+
+<body id="charts_page">
+  <!-- top -->
+  <div class="row top wrap">
+    <div class="logo svg" onclick="location.href='index.html'"></div>
+    <div class="menu ico_container">
+      <div class="menu_cards svg"></div>
+      <div class="menu_charts svg active"></div>
+      <div class="menu_bills svg"></div>
+      <div class="menu_settings svg"></div>
+    </div>  
+  </div>
+  <!-- /top -->
+  <div class="row content">
+
+<!-- select simple 
+    <div class="select select_green" id="opened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap">
+          <div class="opt">select month</div>
+          <div class="opt">select period</div>
+        </div>    
+    </div>
+ -->
+    
+<!-- select month -->
+    <div class="select select_green" id="pened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap">
+          <div class="opt year">2020</div>
+          <div class="row">
+            <div class="opt">jan</div>
+            <div class="opt">feb</div>
+            <div class="opt">mar</div>
+            <div class="opt">apr</div>
+            <div class="opt">may</div>
+            <div class="opt">jun</div>
+          </div>
+          <div class="row">  
+            <div class="opt">jul</div>
+            <div class="opt">aug</div>
+            <div class="opt">sep</div>
+            <div class="opt">oct</div>
+            <div class="opt">nov</div>
+            <div class="opt">dec</div>
+          </div>
+          
+        </div>    
+    </div>
+
+
+<!-- select inputs
+    <div class="select select_green" id="opened">
+        <div class="active wrap">this month</div>
+        <div class="options wrap inputs">
+          <div class="row">
+            <div class="opt">from</div>
+            <div class="opt" contenteditable=""></div>
+          </div>
+          <div class="row">  
+            <div class="opt">to</div>
+            <div class="opt" contenteditable=""></div>
+          </div>         
+        </div>    
+    </div>
+-->
+
+    <!-- section -->
+    <div class="section wrap no_add no_cup monly-circle">
+      <h1>bills</h1>
+      <div class="donut chart">
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+          <circle class="slice_1"></circle><text x="26" y="26">30%</text>
+          <circle class="slice_2"></circle><text x="-1" y="22">10%</text>
+          <circle class="slice_3"></circle><text x="1" y="5">20%</text>
+          <circle class="slice_4"></circle><text x="26" y="5">40%</text>
+          <circle class="slice_f"></circle>
+        </svg>
+        <div class="number big">7,278.00</div>
+      </div> 
+      <div class="item">
+        <div><span class="bullet slice_1"></span>За квартиру</div>
+        <div class="number">12,000.00</div>
+      </div>
+      <div class="item">
+        <div><span class="bullet slice_2"></span>Управляющей</div>
+        <div class="number">3,457.44</div>
+      </div>
+      <div class="item">
+        <div><span class="bullet slice_3"></span>За газ</div>
+        <div class="number">12,000.00</div>
+      </div>
+      <div class="item">
+        <div><span class="bullet slice_4"></span>Налоги</div>
+        <div class="number">3,457.44</div>
+      </div>
+    </div>
+    <!-- /section -->
+
+    <!-- section -->
+    <div class="section wrap no_add no_cup chart_sets hidden">
+      <h1>categories</h1>
+      <div class="colls chart">
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+          <line class="dash" x1="-100" y1="0" x2="100" y2="0"/>
+          <line class="dash" x1="-100" y1="13" x2="100" y2="13"/>
+          <line x1="0" y1="28" x2="0" y2="14.5" class="set slice_1"/>
+          <line x1="4" y1="28" x2="4" y2="12" class="slice_2"/>
+          <line x1="8" y1="28" x2="8" y2="1.5" class="set slice_3"/>
+          <line x1="12" y1="28" x2="12" y2="11" class="set slice_4"/>
+          <rect />
+          <text x="-1" y="29" class="set">50%</text>
+          <text x="3" y="29">10%</text>
+          <text x="7" y="29" class="set">100%</text>
+          <text x="11" y="29" class="set">40%</text>
+        </svg>
+      </div>        
+      <div class="item set">
+        <div><span class="bullet slice_1"></span>Groceries</div>
+        <div class="number">12,000.00</div>
+      </div>
+      <div class="item">
+        <div><span class="bullet slice_2"></span>Auto gas</div>
+        <div class="number">3,457.44</div>
+      </div>
+      <div class="item set">
+        <div><span class="bullet slice_3"></span>Auto repairs</div>
+        <div class="number">12,000.00</div>
+      </div>
+      <div class="item set">
+        <div><span class="bullet slice_4"></span>Transport</div>
+        <div class="number">3,457.44</div>
+      </div>
+    </div>
+    <!-- /section -->
+
+    <!-- section -->
+    <div class="section wrap no_add no_cup hidden">
+      <h1>review</h1>
+      <div class="waves chart">
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+          <line class="dash" x1="0" y1="0" x2="100" y2="0"/>
+          <line class="dash" x1="0" y1="13" x2="100" y2="13"/>
+          <line class="dash" x1="0" y1="0" x2="0" y2="30"/>
+          <line class="dash" x1="17" y1="0" x2="17" y2="100"/>
+          <line class="dash" x1="47" y1="0" x2="47" y2="100"/>
+          <path d="M0,58.842V33.065s6-4.052,11.823-4.218,5.754,3.606,11.45,3.552,2.517,11.515,6.4,11.515.944-7.111,8.984-7.111S51.2,58.842,59.73,58.842H79.179c5.447,0,4.614-12.407,9.693-12.407h6.863c4.077,0,3.787-7.262,7.6-7.262h5.986V58.842" transform="translate(0.5 -28.344)" class="slice_9"/>
+          <path d="M-45,58.842V50.659a54.51,54.51,0,0,0,12.447,1.475c5.818-.166,2.591-8.165,8.288-8.219s8.688,2.52,12.567,2.52,4.784-11.084,12.823-11.084,9.184,7,17.71,7,2.743,12.684,7.6,12.684,2.484-2.9,7.931-2.9,3.812-10.9,8.89-10.9,2.708-5.886,6.785-5.886,4-6.573,7.821-6.573,6.457-14.124,6.457-14.124V58.842" transform="translate(0.5 -28)" class="slice_5"/>
+          <rect />
+          <text x="-45.5" y="29" class="set">01.08</text><text x="-15" y="29">08.08</text><text x="15" y="29" class="set">16.08</text><text x="45" y="29" class="set">24.08</text><text x="72" y="29">31.08</text>
+        </svg>
+      </div>        
+      <div class="item">
+        <div><span class="bullet slice_1"></span>Income</div>
+        <div class="number">12,000.00</div>
+      </div>
+      <div class="item">
+        <div><span class="bullet slice_2"></span>Expence</div>
+        <div class="number">3,457.44</div>
+      </div>
+    </div>
+    <!-- /section -->
+
+    <!--<div class="pay">
+      <div class="svg"></div>
+    </div>-->
+  </div>
+</body>    
+</html>

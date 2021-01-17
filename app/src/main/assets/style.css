@@ -707,11 +707,7 @@ h1 {
   r: 42%;
 }
 
-svg circle.slice_1 { stroke-dasharray: 30 70; stroke-dashoffset: 0;}
-svg circle.slice_2 { stroke-dasharray: 10 90; stroke-dashoffset: -30;}
-svg circle.slice_3 { stroke-dasharray: 20 80; stroke-dashoffset: -40;}
-svg circle.slice_4 { stroke-dasharray: 40 60; stroke-dashoffset: -60;}
-svg circle.slice_f { stroke-dasharray: 1 99; stroke-dashoffset: 0;}
+svg circle.slice_f { stroke-dasharray: 1px 80px; stroke-dashoffset: 0px;}
 
 .chart svg text {
   font-size: 1.5px;
@@ -778,4 +774,8 @@ svg circle.slice_f { stroke-dasharray: 1 99; stroke-dashoffset: 0;}
   width: 65%;
   height: 65%;
   background-image: url(images/ico_pay.svg);
+}
+
+.hidden {
+  display: none;
 }
