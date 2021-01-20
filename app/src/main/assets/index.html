@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ontouchmove> 
+<html ontouchmove>
 
 <head>
   <title>Monly</title>
@@ -12,13 +12,13 @@
 <body id="main_page">
   <!-- top -->
   <div class="row top wrap">
-    <div class="logo svg"></div> 
+    <div class="logo svg"></div>
     <div class="menu ico_container">
       <div class="menu_cards svg"></div>
       <a href="charts.html"><div class="menu_charts svg"></div></a>
       <div class="menu_bills svg"></div>
       <div class="menu_settings svg"></div>
-    </div>  
+    </div>
   </div>
   <!-- /top -->
   <div class="row content no_filter clear">
@@ -30,16 +30,16 @@
     </div>
     <!-- /section -->
 
-<!-- select simple 
+<!-- select simple
     <div class="select select_green" id="opened">
         <div class="active wrap">this month</div>
         <div class="options wrap">
           <div class="opt">select month</div>
           <div class="opt">select period</div>
-        </div>    
+        </div>
     </div>
  -->
-    
+
 <!-- select month -->
     <!--<div class="select select_green" id="opened">
         <div class="active wrap">this month</div>
@@ -53,7 +53,7 @@
             <div class="opt">may</div>
             <div class="opt">jun</div>
           </div>
-          <div class="row">  
+          <div class="row">
             <div class="opt">jul</div>
             <div class="opt">aug</div>
             <div class="opt">sep</div>
@@ -61,8 +61,8 @@
             <div class="opt">nov</div>
             <div class="opt">dec</div>
           </div>
-          
-        </div>    
+
+        </div>
     </div>-->
 
 
@@ -74,11 +74,11 @@
             <div class="opt">from</div>
             <div class="opt" contenteditable=""></div>
           </div>
-          <div class="row">  
+          <div class="row">
             <div class="opt">to</div>
             <div class="opt" contenteditable=""></div>
-          </div>         
-        </div>    
+          </div>
+        </div>
     </div>
 -->
 
@@ -192,7 +192,7 @@
         </div>
       </div>
       <!-- /item -->
-<!-- step_1 
+<!-- step_1
       <div class="item add_item step_1">
         <div class="row">
           <div class="action">
@@ -220,13 +220,6 @@
           <div class="first_coll light">19 aug 2020</div>
           <div class="second_coll small">
             <!-- select simple -->
-            <div class="select select_white" id="opened_money">
-                <div class="active small light">Яндекс.Деньги</div>
-                <div class="options wrap">
-                  <div class="opt small">Cash</div>
-                  <div class="opt small">alfa bank</div>
-                </div>    
-            </div>
             <!-- /select simple -->
           </div>
           <div class="third_coll number light">10,000.00</div>
@@ -241,7 +234,7 @@
                   <div class="opt small">groceries</div>
                   <div class="opt small">auto gas</div>
                   <div class="opt small">travels</div>
-                </div>    
+                </div>
             </div>
             <!-- /select simple -->
           </div>
@@ -259,5 +252,15 @@
       <div class="svg"></div>
     </div>-->
   </div>
-</body>    
+
+<div class="templates hidden">
+  <div class="select select_white">
+    <div class="active small light">{value}</div>
+    <div class="options wrap">
+      {options}
+    </div>
+  </div>
+  <div class="opt small">{value}</div>
+</div>
+</body>
 </html>

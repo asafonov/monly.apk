@@ -527,15 +527,15 @@ h1 {
   padding-top: 0;
 }
 
-[id*="opened"] .options {
+.monly-popup .options {
   display: block;
 }
 
-[id*="opened"] .active::after {
+.monly-popup .active::after {
   transform: rotateZ(-90deg) rotateY(0);
 }
 
-[id*="opened_"] .active {
+.monly-popup .active {
   color: var(--text_color) !important;
   opacity: 1;
 

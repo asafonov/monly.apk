@@ -8,6 +8,9 @@ class AbstractList {
     }
     return this.list;
   }
+  length() {
+    return Object.keys(this.list).length;
+  }
   getDefault() {
     return Object.keys(this.list)[0];
   }
@@ -237,13 +240,15 @@ class AccountsController {
       this.onAmountChanged(-amountChanged, event.to.account);
     }
     if (accountChanged) {
-      this.onAccountChanged();
+      this.onAccountChanged(event.from.account, event.to.account, event.to.amount);
     }
   }
   onAmountChanged (amount, account) {
     this.model.purchase(account, amount);
   }
-  onAccountChanged() {
+  onAccountChanged (from, to, amount) {
+    this.model.purchase(from, amount);
+    this.model.purchase(to, -amount);
   }
   destroy() {
     asafonov.messageBus.unsubscribe(asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated');
@@ -615,7 +620,9 @@ class TransactionsView {
     this.expenseElement = document.querySelector('.expense');
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this);
     this.onAmountChangedProxy = this.onAmountChanged.bind(this);
+    this.onAccountClickedProxy = this.onAccountClicked.bind(this);
     this.onItemDataChangedProxy = this.onItemDataChanged.bind(this);
+    this.closePopupProxy = this.closePopup.bind(this);
     this.model = new Transactions();
     this.addEventListeners();
   }
@@ -652,6 +659,46 @@ class TransactionsView {
     for (let i = 0; i < items.length; ++i) {
       this.listElement.removeChild(items[i]);
     }
+  }
+  closePopup (event) {
+    const popup = this.listElement.querySelector('.monly-popup');
+    if (! popup || popup.contains(event.target)) {
+      return;
+    }
+    window.removeEventListener('click', this.closePopupProxy);
+    const itemDiv = popup.parentNode.parentNode;
+    const itemId = itemDiv.getAttribute('data-id');
+    this.renderItem(this.model.getItem(itemId), itemId);
+  }
+  onAccountClicked (event) {
+    if (asafonov.accounts.length() < 2 || document.querySelector('.monly-popup')) {
+      return ;
+    }
+    const div = event.currentTarget;
+    const selected = div.innerHTML;
+    div.classList.add('monly-popup');
+    const select = document.querySelector('.templates .select').outerHTML;
+    const opt = document.querySelector('.templates .opt').outerHTML;
+    const accounts = asafonov.accounts.getList();
+    let options = '';
+    for (let i in accounts) {
+      if (i !== selected) {
+        options += opt.replace('{value}', i);
+      }
+    }
+    div.innerHTML = select.replace('{value}', selected).replace('{options}', options);
+    const opts = div.querySelectorAll('.opt');
+    for (let o of opts) {
+      o.setAttribute('data-id', div.parentNode.parentNode.getAttribute('data-id'));
+      o.addEventListener('click', this.onAccountSelected.bind(this));
+    }
+    window.addEventListener('click', this.closePopupProxy);
+  }
+  onAccountSelected (event) {
+    const account = event.currentTarget.innerHTML;
+    const id = event.currentTarget.getAttribute('data-id');
+    this.model.updateItem(id, {account: account});
+    event.stopPropagation();
   }
   onAmountChanged (event) {
     const element = event.currentTarget;
@@ -699,6 +746,7 @@ class TransactionsView {
     const accountDiv = document.createElement('div');
     accountDiv.className = 'second_coll small';
     accountDiv.innerHTML = item.account;
+    accountDiv.addEventListener('click', this.onAccountClickedProxy);
     row1.appendChild(accountDiv);
     const amountDiv = document.createElement('div');
     amountDiv.className = 'third_coll number';
