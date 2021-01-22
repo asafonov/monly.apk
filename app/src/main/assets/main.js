@@ -165,7 +165,8 @@ class Reports extends AbstractPeriodList {
     const tags = new Set(transactions.getList().map(i => i.tag));
     let item = {};
     for (let i of tags) {
-      item[i] = transactions.sumByTag(i);
+      const sumByTag = transactions.sumByTag(i);
+      if (sumByTag > 0) item[i] = sumByTag;
     }
     this.addItem(item);
     if (removeSource) transactions.clear();
@@ -197,6 +198,9 @@ class Transactions extends AbstractPeriodList {
     super.addItem(item, asafonov.events.TRANSACTION_UPDATED);
   }
   updateItem (id, item) {
+    if (item.amount !== undefined && item.amount !== null) {
+      item.type = this.assignType(item.amount);
+    }
     super.updateItem(id, item, asafonov.events.TRANSACTION_UPDATED);
   }
   deleteItem (id) {
@@ -218,7 +222,7 @@ class Transactions extends AbstractPeriodList {
 class Utils {
   displayMoney (money) {
     const dollars = parseInt(money / 100, 10);
-    const cents = this.padlen((money % 100).toString(), 2, '0');
+    const cents = this.padlen((Math.abs(money) % 100).toString(), 2, '0');
     return `${dollars}.${cents}`;
   }
   padlen (str, len, symbol) {
@@ -750,7 +754,7 @@ class TransactionsView {
     row1.appendChild(accountDiv);
     const amountDiv = document.createElement('div');
     amountDiv.className = 'third_coll number';
-    amountDiv.innerHTML = asafonov.utils.displayMoney(item.amount);
+    amountDiv.innerHTML = asafonov.utils.displayMoney(Math.abs(item.amount));
     amountDiv.setAttribute('contenteditable', 'true');
     amountDiv.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')));
     amountDiv.addEventListener('blur', this.onAmountChangedProxy);
@@ -778,8 +782,8 @@ class TransactionsView {
     icoDiv.className = 'third_coll ico_container';
     row2.appendChild(icoDiv);
     const ico = document.createElement('div');
-    ico.className = 'svg';
     ico.classList.add('trans_' + item.type);
+    ico.classList.add('svg');
     icoDiv.appendChild(ico);
     itemDiv.appendChild(row2);
     if (! itemAdded) this.headerElement.after(itemDiv);
