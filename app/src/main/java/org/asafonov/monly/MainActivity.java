@@ -7,7 +7,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.content.pm.PackageManager;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.ActivityCompat;
+import androidx.core.app.ActivityCompat;
 
 public class MainActivity extends Activity {
 
