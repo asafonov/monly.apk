@@ -6,7 +6,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    qdefaultConfig {
+    defaultConfig {
         applicationId "org.asafonov.monly"
         minSdkVersion 28
         targetSdkVersion 29
