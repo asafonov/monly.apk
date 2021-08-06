@@ -268,8 +268,13 @@ class ReportsController {
   }
   build() {
     let d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    this.buildOnDate(d.getFullYear(), d.getMonth() + 1, true);
+    let month = d.getMonth()
+    let year = d.getFullYear()
+    if (month == 0) {
+      month = 12
+      year -= 1
+    }
+    this.buildOnDate(year, month, true);
   }
 }
 class AccountsView {
