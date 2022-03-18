@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         mWebView.setWebViewClient(new MyWebViewClient());
+        mWebView.setWebChromeClient(new MyWebChromeClient());
         mWebView.loadUrl("file:///android_asset/index.html");
     }
 
