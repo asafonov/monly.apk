@@ -263,6 +263,35 @@ class Transactions extends AbstractPeriodList {
     return this.list.filter(v => func(v)).map(v => v.amount).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
   }
 }
+class Updater {
+  constructor (upstreamVersionUrl) {
+    this.upstreamVersionUrl = upstreamVersionUrl
+  }
+  getCurrentVersion() {
+    return window.asafonov.version
+  }
+  getUpstreamVersion() {
+    return fetch(this.upstreamVersionUrl)
+      .then(data => data.text())
+      .then(data => data.replace(/[^0-9\.]/g, ''))
+  }
+  compareVersion (v1, v2) {
+    const _v1 = v1.split('.')
+    const _v2 = v2.split('.')
+    return parseInt(_v1[0], 10) > parseInt(_v2[0], 10) || parseInt(_v1[1], 10) > parseInt(_v2[1], 10)
+  }
+  getUpdateUrl (template) {
+    return template.replace('{VERSION}', this.upstreamVersion)
+  }
+  isUpdateNeeded() {
+    return this.getUpstreamVersion().
+      then(upstreamVersion => {
+        this.upstreamVersion = upstreamVersion
+        const currentVersion = this.getCurrentVersion()
+        return this.compareVersion(upstreamVersion, currentVersion)
+      })
+  }
+}
 class Utils {
   displayMoney (money) {
     const dollars = parseInt(money / 100, 10);
@@ -303,8 +332,6 @@ class AccountsController {
   }
 }
 class ReportsController {
-  constructor() {
-  }
   buildOnDate (year, month, removeSource) {
     const reports = new Reports(year, month, removeSource);
     reports.build(removeSource);
@@ -984,7 +1011,23 @@ class TransactionsView {
     this.reviewElement = null
   }
 }
+class UpdaterView {
+  constructor (upstreamVersionUrl, updateUrl) {
+    this.model = new Updater(upstreamVersionUrl)
+    this.updateUrl = updateUrl
+  }
+  showUpdateDialogIfNeeded() {
+    this.model.isUpdateNeeded()
+      .then(isUpdateNeeded => {
+        if (isUpdateNeeded) this.showUpdateDialog()
+      })
+  }
+  showUpdateDialog() {
+    if (confirm('New version available. Do you want to update the App?')) location.href = this.model.getUpdateUrl(this.updateUrl)
+  }
+}
 window.asafonov = {};
+window.asafonov.version = '1.6'
 window.asafonov.utils = new Utils();
 window.asafonov.messageBus = new MessageBus();
 window.asafonov.events = {
@@ -1007,6 +1050,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
   const loader = {
     main_page: () => {
+      const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
+      updaterView.showUpdateDialogIfNeeded()
       asafonov.accounts = new Accounts(
         {Account1: 300000, Account2: 4142181} // test data
       )
