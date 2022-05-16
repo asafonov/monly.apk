@@ -80,6 +80,10 @@ h1 {
   font-weight: 250;
 }
 
+.margin_bottom {
+  margin-bottom: var(--height_1);
+}
+
 .number {
   font-family: numFont;
   font-weight: 300;

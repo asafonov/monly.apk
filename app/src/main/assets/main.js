@@ -836,14 +836,13 @@ class TransactionsView {
   }
   addEventListeners() {
     this.updateEventListeners(true)
-    asafonov.messageBus.subscribe(asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated')
   }
   removeEventListeners() {
     this.updateEventListeners()
-    asafonov.messageBus.unsubscribe(asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated')
   }
   updateEventListeners (add) {
     this.addButton[add ? 'addEventListener' : 'removeEventListener']('click', this.onAddButtonClickedProxy)
+    asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated')
   }
   onTransactionUpdated (event) {
     this.renderItem (event.to, event.id)
@@ -881,7 +880,7 @@ class TransactionsView {
   }
   onAccountClicked (event) {
     if (asafonov.accounts.length() < 2 || document.querySelector('.monly-popup')) {
-      return 
+      return
     }
     const div = event.currentTarget
     const selected = div.innerHTML
@@ -991,7 +990,7 @@ class TransactionsView {
     ico.classList.add('svg')
     icoDiv.appendChild(ico)
     itemDiv.appendChild(row2)
-    if (! itemAdded && !! this.headerElement) this.headerElement.after(itemDiv)
+    if (! itemAdded && !! this.addButton) this.addButton.after(itemDiv)
   }
   updateList() {
     this.clearExistingItems()
