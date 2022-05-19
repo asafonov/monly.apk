@@ -101,6 +101,11 @@ class Accounts extends AbstractList {
   purchase (id, amount) {
     this.updateItem(id, this.list[id] + amount);
   }
+  getDefault() {
+    const settings = new Settings()
+    const defaultAccount = settings.getItem('default_account')
+    return defaultAccount || super.getDefault()
+  }
 }
 class Backup {
   clear() {
@@ -213,7 +218,8 @@ class Settings extends AbstractList {
         review: true,
         budget: true,
         transactions: true
-      }
+      },
+      default_account: null
     })
   }
 }
@@ -779,6 +785,7 @@ class SettingsView {
   constructor() {
     this.model = new Settings()
     this.mainScreen = document.querySelector('.settings-mainscreen')
+    this.defaultAccountScreen = document.querySelector('.settings-default-account')
   }
   showMainScreen() {
     this.mainScreen.innerHTML = '<h1>main screen</h1>'
@@ -803,8 +810,32 @@ class SettingsView {
       })
     }
   }
+  showDefaultAccountScreen() {
+    this.defaultAccountScreen.innerHTML = '<h1>default account</h1>'
+    const accounts = asafonov.accounts.getList()
+    const defaultAccount = this.model.getItem('default_account')
+    for (let i in accounts) {
+      const div = document.createElement('div')
+      div.className = 'item accounts-item'
+      div.innerHTML = `<div>${i}</div>`
+      div.setAttribute('data-value', i)
+      defaultAccount === i && div.classList.add('set')
+      this.defaultAccountScreen.appendChild(div)
+      div.addEventListener('click', event => {
+        const target = event.target.parentNode
+        const value = target.getAttribute('data-value')
+        const items = document.querySelectorAll('.accounts-item')
+        for (let i = 0; i < items.length; ++i) {
+          items[i].classList.remove('set')
+        }
+        target.classList.add('set')
+        this.model.updateItem('default_account', value)
+      })
+    }
+  }
   show() {
     this.showMainScreen()
+    this.showDefaultAccountScreen()
   }
 }
 class TransactionsView {
@@ -1026,7 +1057,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {};
-window.asafonov.version = '1.8'
+window.asafonov.version = '1.6'
 window.asafonov.utils = new Utils();
 window.asafonov.messageBus = new MessageBus();
 window.asafonov.events = {
@@ -1069,6 +1100,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
       reportsView.show()
     },
     settings_page: () => {
+      asafonov.accounts = new Accounts()
       const settingsView = new SettingsView()
       settingsView.show()
       const backupView = new BackupView()
