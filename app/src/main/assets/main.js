@@ -353,6 +353,11 @@ class ReportsController {
     }
     this.buildOnDate(year, month, true);
   }
+  availableReports() {
+    const availableReportsKeys = Object.keys(window.localStorage).filter(i => i.substr(0, 8) === 'reports_').map(i => i.substr(8))
+    return availableReportsKeys
+  }
+  destroy() {}
 }
 class AccountsView {
   constructor() {
@@ -721,7 +726,49 @@ class BudgetsView {
 class ReportsView {
   constructor() {
     this.model = new Reports()
+    this.controller = new ReportsController()
     this.circleLen = 30 * 0.42 * 2 * Math.PI
+    this.popup = document.querySelector('.select')
+    this.options = this.popup.querySelector('.options')
+    this.active = this.popup.querySelector('.active')
+    this.togglePopupProxy = this.togglePopup.bind(this)
+    this.addEventListeners()
+    this.initAvailableReports()
+  }
+  initAvailableReports() {
+    const availableReports = this.controller.availableReports()
+    const availableReportsMap = {}
+    for (let i = 0; i < availableReports.length; ++i) {
+      availableReportsMap[availableReports[i]] = true
+    }
+    const year = new Date().getFullYear()
+    this.options.querySelector('.year').innerHTML = year
+    for (let i = 1; i < 13; ++i) {
+      const m = asafonov.utils.padlen(i + '', 2, '0')
+      const c = `.m${m}`
+      const k = `${year}${m}`
+      const isReportAvailable = availableReportsMap[k]
+      const month = this.options.querySelector(c)
+      month.style.display = isReportAvailable ? 'block' : 'none'
+      if (isReportAvailable) {
+        month.addEventListener('click', () => this.loadReport(m, year))
+      }
+    }
+  }
+  loadReport (m, y) {
+    this.model.destroy()
+    this.model = new Reports(y, m)
+    this.show()
+    this.togglePopup()
+  }
+  addEventListeners() {
+    this.active.addEventListener('click', this.togglePopupProxy)
+  }
+  removeEventListeners() {
+    this.active.removeEventListener('click', this.togglePopupProxy)
+  }
+  togglePopup() {
+    this.popup.classList.toggle('monly-popup')
   }
   clearExistingItems() {
     const items = this.element.querySelectorAll('.item')
@@ -779,6 +826,11 @@ class ReportsView {
     const circle = document.createElement('circle')
     circle.className = 'slice_f'
     this.circleElement.innerHTML += circle.outerHTML
+  }
+  destroy() {
+    this.model.destroy()
+    this.controller.destroy()
+    this.removeEventListeners()
   }
 }
 class SettingsView {
@@ -1057,7 +1109,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {};
-window.asafonov.version = '1.9'
+window.asafonov.version = '1.10'
 window.asafonov.utils = new Utils();
 window.asafonov.messageBus = new MessageBus();
 window.asafonov.events = {
