@@ -256,11 +256,28 @@ class Transactions extends AbstractPeriodList {
   deleteItem (id) {
     super.deleteItem(id);
   }
-  expense() {
-    return this.sum(i => i.amount > 0);
+  getSumsByTags() {
+    const tags = {}
+    for (let i = 0; i < this.list.length; ++i) {
+      tags[this.list[i].tag] = (tags[this.list[i].tag] || 0) + this.list[i].amount
+    }
+    return tags
   }
   income() {
-    return Math.abs(this.sum(i => i.amount < 0));
+    const tags = this.getSumsByTags()
+    let sum = 0
+    for (let i in tags) {
+      sum += tags[i] < 0 ? -1 * tags[i] : 0
+    }
+    return sum
+  }
+  expense() {
+    const tags = this.getSumsByTags()
+    let sum = 0
+    for (let i in tags) {
+      sum += tags[i] > 0 ? tags[i] : 0
+    }
+    return sum
   }
   sumByTag (tag) {
     return this.sum(i => i.tag === tag);
@@ -760,6 +777,7 @@ class ReportsView {
     this.model = new Reports(y, m)
     this.show()
     this.togglePopup()
+    this.active.innerHTML = this.options.querySelector(`.m${m}`).innerHTML + ' ' + y
   }
   addEventListeners() {
     this.active.addEventListener('click', this.togglePopupProxy)
@@ -1109,7 +1127,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {};
-window.asafonov.version = '1.10'
+window.asafonov.version = '1.11'
 window.asafonov.utils = new Utils();
 window.asafonov.messageBus = new MessageBus();
 window.asafonov.events = {
