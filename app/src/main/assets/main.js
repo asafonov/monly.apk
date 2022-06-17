@@ -219,16 +219,18 @@ class Settings extends AbstractList {
         budget: true,
         transactions: true
       },
-      default_account: null
+      default_account: null,
+      account_rate: {}
     })
   }
 }
 class Transactions extends AbstractPeriodList {
   constructor (year, month) {
-    super(year, month, 'transactions_', asafonov.events.TRANSACTIONS_LOADED);
+    super(year, month, 'transactions_', asafonov.events.TRANSACTIONS_LOADED)
+    this.settings = new Settings()
   }
   assignType (amount) {
-    return amount >= 0 ? 'expense' : 'income';
+    return amount >= 0 ? 'expense' : 'income'
   }
   createItem (date, account, amount, pos, tag, type) {
     return {
@@ -238,28 +240,29 @@ class Transactions extends AbstractPeriodList {
       pos: pos,
       tag: tag,
       type: type || this.assignType(amount)
-    };
+    }
   }
   add (date, account, amount, pos, tag, type) {
-    const item = this.createItem(date, account, amount, pos, tag, type);
-    this.addItem(item);
+    const item = this.createItem(date, account, amount, pos, tag, type)
+    this.addItem(item)
   }
   addItem (item) {
-    super.addItem(item, asafonov.events.TRANSACTION_UPDATED);
+    super.addItem(item, asafonov.events.TRANSACTION_UPDATED)
   }
   updateItem (id, item) {
     if (item.amount !== undefined && item.amount !== null) {
-      item.type = this.assignType(item.amount);
+      item.type = this.assignType(item.amount)
     }
-    super.updateItem(id, item, asafonov.events.TRANSACTION_UPDATED);
+    super.updateItem(id, item, asafonov.events.TRANSACTION_UPDATED)
   }
   deleteItem (id) {
-    super.deleteItem(id);
+    super.deleteItem(id)
   }
   getSumsByTags() {
     const tags = {}
+    const accountRate = this.settings.getItem('account_rate')
     for (let i = 0; i < this.list.length; ++i) {
-      tags[this.list[i].tag] = (tags[this.list[i].tag] || 0) + this.list[i].amount
+      tags[this.list[i].tag] = (tags[this.list[i].tag] || 0) + this.list[i].amount * (accountRate[this.list[i].account] || 1)
     }
     return tags
   }
@@ -280,10 +283,11 @@ class Transactions extends AbstractPeriodList {
     return sum
   }
   sumByTag (tag) {
-    return this.sum(i => i.tag === tag);
+    return this.sum(i => i.tag === tag)
   }
   sum (func) {
-    return this.list.filter(v => func(v)).map(v => v.amount).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    const accountRate = this.settings.getItem('account_rate')
+    return this.list.filter(v => func(v)).map(v => v.amount * (accountRate[v.account] || 1)).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   }
 }
 class Updater {
@@ -379,8 +383,8 @@ class ReportsController {
 class AccountsView {
   constructor() {
     this.listElement = document.querySelector('.accounts')
-    const settings = new Settings()
-    const mainscreen = settings.getItem('mainscreen')
+    this.settings = new Settings()
+    const mainscreen = this.settings.getItem('mainscreen')
     const isEnabled = mainscreen.accounts
     this.model = asafonov.accounts
     if (! isEnabled) {
@@ -493,8 +497,9 @@ class AccountsView {
     const list = this.model.getList()
     const totalElement = this.listElement.querySelector('.number.big')
     let total = 0
+    const accountRate = this.settings.getItem('account_rate')
     for (let key in list) {
-      total += list[key]
+      total += list[key] * (accountRate[key] || 1)
     }
     totalElement.innerHTML = asafonov.utils.displayMoney(total)
   }
@@ -856,6 +861,7 @@ class SettingsView {
     this.model = new Settings()
     this.mainScreen = document.querySelector('.settings-mainscreen')
     this.defaultAccountScreen = document.querySelector('.settings-default-account')
+    this.accountRateScreen = document.querySelector('.settings-account-rate')
   }
   showMainScreen() {
     this.mainScreen.innerHTML = '<h1>main screen</h1>'
@@ -903,9 +909,31 @@ class SettingsView {
       })
     }
   }
+  showAccountRateScreen() {
+    this.accountRateScreen.innerHTML = '<h1>account rates</h1>'
+    const accounts = asafonov.accounts.getList()
+    for (let i in accounts) {
+      const div = document.createElement('div')
+      div.className = 'item accounts-item'
+      div.innerHTML = `<div>${i}</div>`
+      div.setAttribute('data-value', i)
+      this.accountRateScreen.appendChild(div)
+      div.addEventListener('click', event => {
+        const target = event.target
+        const value = target.getAttribute('data-value')
+        const accountRate = this.model.getItem('account_rate') || {}
+        const newRate = prompt('Please enter the account rate', accountRate[value] || 1)
+        if (newRate) {
+          accountRate[value] = parseFloat(newRate)
+          this.model.updateItem('account_rate', accountRate)
+        }
+      })
+    }
+  }
   show() {
     this.showMainScreen()
     this.showDefaultAccountScreen()
+    this.showAccountRateScreen()
   }
 }
 class TransactionsView {
@@ -1126,10 +1154,10 @@ class UpdaterView {
     if (confirm('New version available. Do you want to update the App?')) location.href = this.model.getUpdateUrl(this.updateUrl)
   }
 }
-window.asafonov = {};
-window.asafonov.version = '1.11'
-window.asafonov.utils = new Utils();
-window.asafonov.messageBus = new MessageBus();
+window.asafonov = {}
+window.asafonov.version = '1.12'
+window.asafonov.utils = new Utils()
+window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
   ACCOUNT_UPDATED: 'accountUpdated',
   ACCOUNT_RENAMED: 'accountRenamed',
@@ -1137,11 +1165,11 @@ window.asafonov.events = {
   BUDGET_UPDATED: 'budgetUpdated',
   BUDGET_RENAMED: 'budgetRenamed',
   TRANSACTIONS_LOADED: 'transactionsLoaded'
-};
+}
 window.asafonov.settings = {
-};
+}
 window.onerror = (msg, url, line) => {
-  alert(`${msg} on line ${line}`);
+  alert(`${msg} on line ${line}`)
 }
 document.addEventListener("DOMContentLoaded", function (event) {
   function getPageName() {
