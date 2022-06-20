@@ -1,6 +1,7 @@
 class AbstractList {
   constructor (list) {
-    this.list = this.getList() || list || {}
+    this.list = this.getList() || {}
+    if (list) this.list = {...list, ...this.list}
   }
   getList() {
     if (this.list === null || this.list === undefined) {
@@ -1155,7 +1156,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.12'
+window.asafonov.version = '1.13'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
