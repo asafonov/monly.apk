@@ -1156,7 +1156,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.13'
+window.asafonov.version = '1.14'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
@@ -1181,9 +1181,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     main_page: () => {
       const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
       updaterView.showUpdateDialogIfNeeded()
-      asafonov.accounts = new Accounts(
-        {Account1: 300000, Account2: 4142181} // test data
-      )
+      asafonov.accounts = new Accounts()
       const accountsController = new AccountsController()
       const accountsView = new AccountsView()
       accountsView.updateList()
