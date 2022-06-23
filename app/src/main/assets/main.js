@@ -239,7 +239,7 @@ class Transactions extends AbstractPeriodList {
       account: account,
       amount: amount,
       pos: pos,
-      tag: tag,
+      tag: tag.trim(),
       type: type || this.assignType(amount)
     }
   }
@@ -828,7 +828,9 @@ class ReportsView {
     let i = 1
     let offset = 0
     this.totalElement.innerHTML = asafonov.utils.displayMoney(total)
-    for (let item in data) {
+    const keys = Object.keys(data)
+    keys.sort((a, b) => data[a] < data[b])
+    for (let item of keys) {
       if (! proceedFunction(data[item])) continue
       const value = Math.abs(data[item])
       const lineLen = value / total * this.circleLen
@@ -1156,7 +1158,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.14'
+window.asafonov.version = '1.15'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
