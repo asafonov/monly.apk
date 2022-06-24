@@ -200,7 +200,7 @@ class Reports extends AbstractPeriodList {
       return;
     }
     this.clear();
-    const tags = new Set(transactions.getList().map(i => i.tag));
+    const tags = new Set(transactions.getList().map(i => i.tag.trim()));
     let item = {};
     for (let i of tags) {
       const sumByTag = transactions.sumByTag(i);
@@ -239,7 +239,7 @@ class Transactions extends AbstractPeriodList {
       account: account,
       amount: amount,
       pos: pos,
-      tag: tag.trim(),
+      tag: tag,
       type: type || this.assignType(amount)
     }
   }
@@ -263,7 +263,8 @@ class Transactions extends AbstractPeriodList {
     const tags = {}
     const accountRate = this.settings.getItem('account_rate')
     for (let i = 0; i < this.list.length; ++i) {
-      tags[this.list[i].tag] = (tags[this.list[i].tag] || 0) + this.list[i].amount * (accountRate[this.list[i].account] || 1)
+      const tag = this.list[i].tag.trim()
+      tags[tag] = (tags[tag] || 0) + this.list[i].amount * (accountRate[this.list[i].account] || 1)
     }
     return tags
   }
@@ -284,7 +285,7 @@ class Transactions extends AbstractPeriodList {
     return sum
   }
   sumByTag (tag) {
-    return this.sum(i => i.tag === tag)
+    return this.sum(i => i.tag.trim() === tag)
   }
   sum (func) {
     const accountRate = this.settings.getItem('account_rate')
@@ -829,7 +830,7 @@ class ReportsView {
     let offset = 0
     this.totalElement.innerHTML = asafonov.utils.displayMoney(total)
     const keys = Object.keys(data)
-    keys.sort((a, b) => data[a] < data[b])
+    keys.sort((a, b) => data[a] > data[b])
     for (let item of keys) {
       if (! proceedFunction(data[item])) continue
       const value = Math.abs(data[item])
@@ -1158,7 +1159,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.15'
+window.asafonov.version = '1.16'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
