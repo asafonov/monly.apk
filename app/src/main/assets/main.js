@@ -830,7 +830,7 @@ class ReportsView {
     let offset = 0
     this.totalElement.innerHTML = asafonov.utils.displayMoney(total)
     const keys = Object.keys(data)
-    keys.sort((a, b) => data[a] > data[b])
+    keys.sort((a, b) => Math.abs(data[a]) - Math.abs(data[b]))
     for (let item of keys) {
       if (! proceedFunction(data[item])) continue
       const value = Math.abs(data[item])
@@ -1159,7 +1159,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.16'
+window.asafonov.version = '1.17'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
