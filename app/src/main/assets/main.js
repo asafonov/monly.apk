@@ -103,7 +103,7 @@ class Accounts extends AbstractList {
     this.updateItem(id, this.list[id] + amount);
   }
   getDefault() {
-    const settings = new Settings()
+    const settings = asafonov.settings
     const defaultAccount = settings.getItem('default_account')
     return defaultAccount || super.getDefault()
   }
@@ -149,6 +149,24 @@ class Budgets extends AbstractList {
   updateId (id, newid) {
     super.updateId(id, newid);
     asafonov.messageBus.send(asafonov.events.BUDGET_RENAMED, {item: this.list[newid], from: id, to: newid});
+  }
+}
+class Currency {
+  buildUrl (base, symbol) {
+    return `https://api.exchangerate.host/lates?base=${base}&symbols=${symbol}`
+  }
+  parseResponse (data, symbol) {
+    return data.rates[symbol]
+  }
+  async convert (base, symbol) {
+    const url = this.buildUrl(base, symbol)
+    let ret = 1
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      ret = this.parseResponse(data, symbol)
+    } catch (e) {}
+    return ret
   }
 }
 class MessageBus {
@@ -224,11 +242,22 @@ class Settings extends AbstractList {
       account_rate: {}
     })
   }
+  async initCurrencyRates() {
+    const currency = new Currency()
+    for (let k in this.list.account_rate) {
+      if (this.list.account_rate[k]?.length === 6 && ! this.list.account_rate[k].match(/[^A-z]/g)) {
+        const base = this.list.account_rate[k].substr(0, 3)
+        const symbol = this.list.account_rate[k].substr(3)
+        const rate = await currency.convert(base, symbol)
+        this.list.account_rate[k] = parseFloat(rate)
+      }
+    }
+  }
 }
 class Transactions extends AbstractPeriodList {
   constructor (year, month) {
     super(year, month, 'transactions_', asafonov.events.TRANSACTIONS_LOADED)
-    this.settings = new Settings()
+    this.settings = asafonov.settings
   }
   assignType (amount) {
     return amount >= 0 ? 'expense' : 'income'
@@ -323,6 +352,7 @@ class Updater {
 }
 class Utils {
   displayMoney (money) {
+    money = parseInt(money, 10)
     const dollars = parseInt(money / 100, 10);
     const cents = this.padlen((Math.abs(money) % 100).toString(), 2, '0');
     return `${dollars}.${cents}`;
@@ -385,7 +415,7 @@ class ReportsController {
 class AccountsView {
   constructor() {
     this.listElement = document.querySelector('.accounts')
-    this.settings = new Settings()
+    this.settings = asafonov.settings
     const mainscreen = this.settings.getItem('mainscreen')
     const isEnabled = mainscreen.accounts
     this.model = asafonov.accounts
@@ -568,7 +598,7 @@ class BackupView {
 class BudgetsView {
   constructor() {
     this.listElement = document.querySelector('.budgets')
-    const settings = new Settings()
+    const settings = asafonov.settings
     const mainscreen = settings.getItem('mainscreen')
     const isEnabled = mainscreen.budget
     this.model = new Budgets()
@@ -862,7 +892,7 @@ class ReportsView {
 }
 class SettingsView {
   constructor() {
-    this.model = new Settings()
+    this.model = asafonov.settings
     this.mainScreen = document.querySelector('.settings-mainscreen')
     this.defaultAccountScreen = document.querySelector('.settings-default-account')
     this.accountRateScreen = document.querySelector('.settings-account-rate')
@@ -920,15 +950,13 @@ class SettingsView {
       const div = document.createElement('div')
       div.className = 'item accounts-item'
       div.innerHTML = `<div>${i}</div>`
-      div.setAttribute('data-value', i)
       this.accountRateScreen.appendChild(div)
       div.addEventListener('click', event => {
-        const target = event.target
-        const value = target.getAttribute('data-value')
         const accountRate = this.model.getItem('account_rate') || {}
-        const newRate = prompt('Please enter the account rate', accountRate[value] || 1)
+        const newRate = prompt('Please enter the account rate', accountRate[i] || 1)
         if (newRate) {
-          accountRate[value] = parseFloat(newRate)
+          const floatRate = parseFloat(newRate)
+          accountRate[i] = floatRate || newRate
           this.model.updateItem('account_rate', accountRate)
         }
       })
@@ -943,7 +971,7 @@ class SettingsView {
 class TransactionsView {
   constructor() {
     this.reviewElement = document.querySelector('.review')
-    const settings = new Settings()
+    const settings = asafonov.settings
     const mainscreen = settings.getItem('mainscreen')
     this.isReviewEnabled = mainscreen.review
     if (! this.isReviewEnabled) {
@@ -1159,7 +1187,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.17'
+window.asafonov.version = '1.18'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
@@ -1181,7 +1209,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
   }
 
   const loader = {
-    main_page: () => {
+    main_page: async () => {
+      asafonov.settings = new Settings()
+      await asafonov.settings.initCurrencyRates()
       const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
       updaterView.showUpdateDialogIfNeeded()
       asafonov.accounts = new Accounts()
@@ -1195,11 +1225,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
       const reportsController = new ReportsController()
       reportsController.build()
     },
-    charts_page: () => {
+    charts_page: async () => {
+      asafonov.settings = new Settings()
+      await asafonov.settings.initCurrencyRates()
       const reportsView = new ReportsView()
       reportsView.show()
     },
     settings_page: () => {
+      asafonov.settings = new Settings()
       asafonov.accounts = new Accounts()
       const settingsView = new SettingsView()
       settingsView.show()
