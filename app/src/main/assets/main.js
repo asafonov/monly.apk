@@ -158,15 +158,45 @@ class Currency {
   parseResponse (data, symbol) {
     return data.rates[symbol]
   }
+  getFromCache (base, symbol) {
+    const k = `currency_${base}${symbol}`
+    const cache = JSON.parse(window.localStorage.getItem(k)) || {}
+    const t = cache.t || 0
+    const now = new Date().getTime()
+    if (t + 12 * 3600 * 1000 > now) {
+      return cache.value
+    }
+    return null
+  }
+  saveToCache (base, symbol, value) {
+    const cache = {
+      t: new Date().getTime(),
+      value: value
+    }
+    const k = `currency_${base}${symbol}`
+    window.localStorage.setItem(k, JSON.stringify(cache))
+  }
   async convert (base, symbol) {
+    let ret = this.getFromCache(base, symbol)
+    if (ret) return ret
     const url = this.buildUrl(base, symbol)
-    let ret = 1
     try {
       const response = await fetch(url)
       const data = await response.json()
       ret = this.parseResponse(data, symbol)
+      if (ret) this.saveToCache(base, symbol, ret)
     } catch (e) {}
     return ret
+  }
+  async initRate (rateValue) {
+    if (rateValue?.length === 6 && ! rateValue.match(/[^A-z]/g)) {
+      const base = rateValue.substr(0, 3)
+      const symbol = rateValue.substr(3)
+      const rate = await this.convert(base, symbol)
+      return parseFloat(rate)
+    } else {
+      return rateValue
+    }
   }
 }
 class MessageBus {
@@ -245,12 +275,8 @@ class Settings extends AbstractList {
   async initCurrencyRates() {
     const currency = new Currency()
     for (let k in this.list.account_rate) {
-      if (this.list.account_rate[k]?.length === 6 && ! this.list.account_rate[k].match(/[^A-z]/g)) {
-        const base = this.list.account_rate[k].substr(0, 3)
-        const symbol = this.list.account_rate[k].substr(3)
-        const rate = await currency.convert(base, symbol)
-        this.list.account_rate[k] = parseFloat(rate)
-      }
+      const rate = await currency.initRate(this.list.account_rate[k])
+      this.list.account_rate[k] = rate
     }
   }
 }
@@ -946,14 +972,15 @@ class SettingsView {
   showAccountRateScreen() {
     this.accountRateScreen.innerHTML = '<h1>account rates</h1>'
     const accounts = asafonov.accounts.getList()
+    const currency = new Currency()
     for (let i in accounts) {
       const div = document.createElement('div')
       div.className = 'item accounts-item'
       div.innerHTML = `<div>${i}</div>`
       this.accountRateScreen.appendChild(div)
-      div.addEventListener('click', event => {
+      div.addEventListener('click', async event => {
         const accountRate = this.model.getItem('account_rate') || {}
-        const newRate = prompt('Please enter the account rate', accountRate[i] || 1)
+        const newRate = prompt('Please enter the account rate', await currency.initRate(accountRate[i]) || 1)
         if (newRate) {
           const floatRate = parseFloat(newRate)
           accountRate[i] = floatRate || newRate
@@ -1187,7 +1214,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.19'
+window.asafonov.version = '1.20'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
@@ -1233,7 +1260,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
     },
     settings_page: async () => {
       asafonov.settings = new Settings()
-      await asafonov.settings.initCurrencyRates()
       asafonov.accounts = new Accounts()
       const settingsView = new SettingsView()
       settingsView.show()
