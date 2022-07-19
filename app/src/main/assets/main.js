@@ -188,8 +188,14 @@ class Currency {
     } catch (e) {}
     return ret
   }
+  trim (value) {
+    return this.isRateNeeded(value) ? value.substr(0, 6) : parseFloat(value)
+  }
+  isRateNeeded (rateValue) {
+    return typeof rateValue === 'string' && rateValue.length >= 6 && rateValue.match(/[A-z]/g)
+  }
   async initRate (rateValue) {
-    if (rateValue?.length === 6 && ! rateValue.match(/[^A-z]/g)) {
+    if (this.isRateNeeded(rateValue)) {
       const base = rateValue.substr(0, 3)
       const symbol = rateValue.substr(3)
       const rate = await this.convert(base, symbol)
@@ -980,10 +986,10 @@ class SettingsView {
       this.accountRateScreen.appendChild(div)
       div.addEventListener('click', async event => {
         const accountRate = this.model.getItem('account_rate') || {}
-        const newRate = prompt('Please enter the account rate', await currency.initRate(accountRate[i]) || 1)
+        const isRateNeeded = currency.isRateNeeded(accountRate[i])
+        const newRate = prompt('Please enter the account rate', (accountRate[i] || 1) + (isRateNeeded ? ` (${await currency.initRate(accountRate[i])})` : ''))
         if (newRate) {
-          const floatRate = parseFloat(newRate)
-          accountRate[i] = floatRate || newRate
+          accountRate[i] = currency.trim(newRate)
           this.model.updateItem('account_rate', accountRate)
         }
       })
@@ -1214,7 +1220,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.20'
+window.asafonov.version = '1.21'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
