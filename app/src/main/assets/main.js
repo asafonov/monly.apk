@@ -164,7 +164,7 @@ class Currency {
     const t = cache.t || 0
     const now = new Date().getTime()
     if (t + 12 * 3600 * 1000 > now) {
-      return cache.value
+      return [cache.value, cache.value]
     }
     return [null, cache.value || 1]
   }
@@ -1220,7 +1220,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.22'
+window.asafonov.version = '1.23'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
