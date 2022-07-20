@@ -186,7 +186,7 @@ class Currency {
       ret = this.parseResponse(data, symbol)
       if (ret) this.saveToCache(base, symbol, ret)
     } catch (e) {}
-    return ret || cache
+    return ret || cache || 1
   }
   trim (value) {
     return this.isRateNeeded(value) ? value.substr(0, 6) : parseFloat(value)
@@ -201,7 +201,7 @@ class Currency {
       const rate = await this.convert(base, symbol)
       return parseFloat(rate)
     } else {
-      return rateValue
+      return parseFloat(rateValue) || 1
     }
   }
 }
@@ -987,7 +987,7 @@ class SettingsView {
       div.addEventListener('click', async event => {
         const accountRate = this.model.getItem('account_rate') || {}
         const isRateNeeded = currency.isRateNeeded(accountRate[i])
-        const newRate = prompt('Please enter the account rate', accountRate[i] + (isRateNeeded ? ` (${await currency.initRate(accountRate[i])})` : ''))
+        const newRate = prompt('Please enter the account rate', (accountRate[i] || await currency.initRate(accountRate[i])) + (isRateNeeded ? ` (${await currency.initRate(accountRate[i])})` : ''))
         if (newRate) {
           accountRate[i] = currency.trim(newRate)
           this.model.updateItem('account_rate', accountRate)
@@ -1220,7 +1220,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.23'
+window.asafonov.version = '1.24'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
