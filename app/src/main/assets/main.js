@@ -899,7 +899,7 @@ class ReportsView {
       const lineLen = value / total * this.circleLen
       const spaceLen = this.circleLen - lineLen
       const circle = document.createElement('circle')
-      circle.className = `slice_${i}`
+      circle.className = `slice_${(i % 11) + 1}`
       circle.style.strokeDasharray = `${lineLen} ${spaceLen}`
       circle.style.strokeDashoffset = offset
       this.circleElement.innerHTML += circle.outerHTML
@@ -1220,7 +1220,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.24'
+window.asafonov.version = '1.25'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
