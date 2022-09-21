@@ -275,7 +275,8 @@ class Settings extends AbstractList {
         transactions: true
       },
       default_account: null,
-      account_rate: {}
+      account_rate: {},
+      categories: ['Groceries', 'Transport', 'Travel', 'Utilities', 'Gas', 'Health', 'Fun', 'Presents', 'Clothes']
     })
   }
   async initCurrencyRates() {
@@ -928,6 +929,7 @@ class SettingsView {
     this.mainScreen = document.querySelector('.settings-mainscreen')
     this.defaultAccountScreen = document.querySelector('.settings-default-account')
     this.accountRateScreen = document.querySelector('.settings-account-rate')
+    this.categoriesScreen = document.querySelector('.settings-categories')
   }
   showMainScreen() {
     this.mainScreen.innerHTML = '<h1>main screen</h1>'
@@ -995,10 +997,40 @@ class SettingsView {
       })
     }
   }
+  showCategoriesScreen() {
+    this.categoriesScreen.innerHTML = '<h1>categories</h1>'
+    const items = this.model.getItem('categories')
+    for (let i of items) {
+      const div = document.createElement('div')
+      div.className = 'item'
+      div.innerHTML = `<div>${i}</div>`
+      this.categoriesScreen.appendChild(div)
+      div.addEventListener('click', () => {
+        if (confirm(`Delete category "${i}"?`)) {
+          items.splice(items.indexOf(i), 1)
+          this.model.updateItem('categories', items)
+          this.showCategoriesScreen()
+        }
+      })
+    }
+    const addButton = document.createElement('div')
+    addButton.className = 'add'
+    addButton.innerHTML = 'add category'
+    this.categoriesScreen.appendChild(addButton)
+    addButton.addEventListener('click', () => {
+      const category = prompt('Enter the category name:')
+      if (category) {
+        items.push(category)
+        this.model.updateItem('categories', items)
+        this.showCategoriesScreen()
+      }
+    })
+  }
   show() {
     this.showMainScreen()
     this.showDefaultAccountScreen()
     this.showAccountRateScreen()
+    this.showCategoriesScreen()
   }
 }
 class TransactionsView {
@@ -1024,6 +1056,7 @@ class TransactionsView {
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this)
     this.onAmountChangedProxy = this.onAmountChanged.bind(this)
     this.onAccountClickedProxy = this.onAccountClicked.bind(this)
+    this.onTagClickedProxy = this.onTagClicked.bind(this)
     this.onItemDataChangedProxy = this.onItemDataChanged.bind(this)
     this.closePopupProxy = this.closePopup.bind(this)
     this.addEventListeners()
@@ -1073,17 +1106,34 @@ class TransactionsView {
     this.renderItem(this.model.getItem(itemId), itemId)
   }
   onAccountClicked (event) {
-    if (asafonov.accounts.length() < 2 || document.querySelector('.monly-popup')) {
+    this.showPopup(Object.keys(asafonov.accounts.getList()), event.currentTarget, e => this.onAccountSelected(e))
+  }
+  onAccountSelected (event) {
+    const account = event.currentTarget.innerHTML
+    const id = event.currentTarget.getAttribute('data-id')
+    this.model.updateItem(id, {account: account})
+    event.stopPropagation()
+  }
+  onTagClicked (event) {
+    const categories = asafonov.settings.getItem('categories')
+    this.showPopup(categories, event.currentTarget, e => this.onTagSelected(e))
+  }
+  onTagSelected (event) {
+    const tag = event.currentTarget.innerHTML
+    const id = event.currentTarget.getAttribute('data-id')
+    this.model.updateItem(id, {tag: tag})
+    event.stopPropagation()
+  }
+  showPopup (list, div, callback) {
+    if (list.length < 2 || document.querySelector('.monly-popup')) {
       return
     }
-    const div = event.currentTarget
     const selected = div.innerHTML
     div.classList.add('monly-popup')
     const select = document.querySelector('.templates .select').outerHTML
     const opt = document.querySelector('.templates .opt').outerHTML
-    const accounts = asafonov.accounts.getList()
     let options = ''
-    for (let i in accounts) {
+    for (let i of list) {
       if (i !== selected) {
         options += opt.replace('{value}', i)
       }
@@ -1092,15 +1142,9 @@ class TransactionsView {
     const opts = div.querySelectorAll('.opt')
     for (let o of opts) {
       o.setAttribute('data-id', div.parentNode.parentNode.getAttribute('data-id'))
-      o.addEventListener('click', this.onAccountSelected.bind(this))
+      o.addEventListener('click', callback)
     }
     window.addEventListener('click', this.closePopupProxy)
-  }
-  onAccountSelected (event) {
-    const account = event.currentTarget.innerHTML
-    const id = event.currentTarget.getAttribute('data-id')
-    this.model.updateItem(id, {account: account})
-    event.stopPropagation()
   }
   onAmountChanged (event) {
     const element = event.currentTarget
@@ -1171,10 +1215,7 @@ class TransactionsView {
     const tagDiv = document.createElement('div')
     tagDiv.className = 'second_coll small'
     tagDiv.innerHTML = item.tag
-    tagDiv.setAttribute('data-name', 'tag')
-    tagDiv.setAttribute('contenteditable', 'true')
-    tagDiv.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
-    tagDiv.addEventListener('blur', this.onItemDataChangedProxy)
+    tagDiv.addEventListener('click', this.onTagClickedProxy)
     row2.appendChild(tagDiv)
     const icoDiv = document.createElement('div')
     icoDiv.className = 'third_coll ico_container'
@@ -1220,7 +1261,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.26'
+window.asafonov.version = '1.27'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
