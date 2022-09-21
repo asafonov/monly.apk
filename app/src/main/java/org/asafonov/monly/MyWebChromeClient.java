@@ -86,7 +86,7 @@ class MyWebChromeClient extends WebChromeClient {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        result.confirm();
+                        result.confirm(input.getText().toString());
                     }
                 }
             )
