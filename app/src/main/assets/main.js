@@ -143,7 +143,7 @@ class Backup {
 class Budgets extends AbstractList {
   updateItem (id, item) {
     const from = this.list[id];
-    super.updateItem(id, item);
+    super.updateItem(id, Math.round(parseFloat(item) * 100));
     asafonov.messageBus.send(asafonov.events.BUDGET_UPDATED, {id: id, from: from, to: item});
   }
   updateId (id, newid) {
@@ -290,7 +290,6 @@ class Settings extends AbstractList {
 class Transactions extends AbstractPeriodList {
   constructor (year, month) {
     super(year, month, 'transactions_', asafonov.events.TRANSACTIONS_LOADED)
-    this.settings = asafonov.settings
   }
   assignType (amount) {
     return amount >= 0 ? 'expense' : 'income'
@@ -315,6 +314,7 @@ class Transactions extends AbstractPeriodList {
   updateItem (id, item) {
     if (item.amount !== undefined && item.amount !== null) {
       item.type = this.assignType(item.amount)
+      item.amount = Math.round(parseFloat(item.amount) * 100)
     }
     super.updateItem(id, item, asafonov.events.TRANSACTION_UPDATED)
   }
@@ -323,7 +323,7 @@ class Transactions extends AbstractPeriodList {
   }
   getSumsByTags() {
     const tags = {}
-    const accountRate = this.settings.getItem('account_rate')
+    const accountRate = asafonov.settings.getItem('account_rate')
     for (let i = 0; i < this.list.length; ++i) {
       const tag = this.list[i].tag.trim()
       tags[tag] = (tags[tag] || 0) + this.list[i].amount * (accountRate[this.list[i].account] || 1)
@@ -350,7 +350,7 @@ class Transactions extends AbstractPeriodList {
     return this.sum(i => i.tag.trim() === tag)
   }
   sum (func) {
-    const accountRate = this.settings.getItem('account_rate')
+    const accountRate = asafonov.settings.getItem('account_rate')
     return this.list.filter(v => func(v)).map(v => v.amount * (accountRate[v.account] || 1)).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   }
 }
@@ -459,7 +459,7 @@ class AccountsView {
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this)
     this.onAccountTitleChangedProxy = this.onAccountTitleChanged.bind(this)
     this.onAccountValueChangedProxy = this.onAccountValueChanged.bind(this)
-    this.addButton = this.listElement.querySelector('.add')
+    this.addButton = this.listElement.querySelector('.add_link')
     this.addEventListeners()
   }
   addEventListeners() {
@@ -490,9 +490,13 @@ class AccountsView {
     this.renderItem(event.to, event.item)
   }
   clearExistingItems() {
-    const items = this.listElement.querySelectorAll('.item')
+    const items = this.listElement.querySelectorAll('.section_row')
     for (let i = 0; i < items.length; ++i) {
       this.listElement.removeChild(items[i])
+    }
+    const underlines = this.listElement.querySelectorAll('.underline')
+    for (let i = 0; i < underlines.length; ++i) {
+      this.listElement.removeChild(underlines[i])
     }
   }
   genItemId (name) {
@@ -506,17 +510,17 @@ class AccountsView {
       item = document.createElement('div')
       itemExists = false
       item.id = itemId
-      item.className = 'item'
+      item.className = 'section_row'
     }
     item.innerHTML = ''
-    const title = document.createElement('div')
+    const title = document.createElement('p')
     title.className = 'title'
     title.setAttribute('contenteditable', 'true')
     title.innerHTML = name
     title.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
     title.addEventListener('blur', this.onAccountTitleChangedProxy)
     item.appendChild(title)
-    const value = document.createElement('div')
+    const value = document.createElement('p')
     value.className = 'number'
     value.innerHTML = asafonov.utils.displayMoney(amount)
     value.setAttribute('contenteditable', 'true')
@@ -525,6 +529,9 @@ class AccountsView {
     item.appendChild(value)
     if (! itemExists) {
       this.listElement.insertBefore(item, this.addButton)
+      const underline = document.createElement('div')
+      underline.className = 'underline'
+      this.listElement.insertBefore(underline, this.addButton)
     }
   }
   onAccountTitleChanged (event) {
@@ -560,7 +567,7 @@ class AccountsView {
   }
   updateTotal() {
     const list = this.model.getList()
-    const totalElement = this.listElement.querySelector('.number.big')
+    const totalElement = this.listElement.querySelector('h2')
     let total = 0
     const accountRate = this.settings.getItem('account_rate')
     for (let key in list) {
@@ -643,9 +650,13 @@ class BudgetsView {
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this)
     this.onTitleChangedProxy = this.onTitleChanged.bind(this)
     this.onValueChangedProxy = this.onValueChanged.bind(this)
-    this.addButton = this.listElement.querySelector('.add')
-    this.totalElement = this.listElement.querySelector('.number.big')
+    this.addButton = this.listElement.querySelector('.add_link')
+    this.totalElement = this.listElement.querySelector('.total')
     this.addEventListeners()
+    this.updateCateories()
+  }
+  updateCateories() {
+    this.categories = asafonov.settings.getItem('categories')
   }
   addEventListeners() {
     this.updateEventListeners(true)
@@ -661,7 +672,7 @@ class BudgetsView {
     asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated')
   }
   onAddButtonClicked() {
-    const name = 'Budget' + Math.floor(Math.random() * 1000)
+    const name = 'Groceries'
     this.model.updateItem(name, 0)
   }
   onBudgetUpdated (event) {
@@ -702,16 +713,11 @@ class BudgetsView {
     const budget = asafonov.utils.displayMoney(this.model.getItem(tag))
     const left = asafonov.utils.displayMoney(this.model.getItem(tag) - sum)
     const spent = asafonov.utils.displayMoney(sum)
-    item.querySelector(`.number.with_left`).innerHTML = left
-    item.querySelector('.row.number.dual').innerText = `${spent} `
-    const v = document.createElement('span')
-    v.setAttribute('contenteditable', 'true')
-    v.innerHTML = budget
-    v.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
-    v.addEventListener('blur', this.onValueChangedProxy)
-    item.querySelector('.row.number.dual').appendChild(v)
-    const width = Math.min(100, parseInt(sum / this.model.getItem(tag) * 100)) || 100
-    item.querySelector('.filled').style.width = `${width}%`
+    item.querySelector(`.number.left`).innerHTML = left
+    item.querySelectorAll('.budget_row .number span')[0].innerText = `${spent} / `
+    item.querySelectorAll('.budget_row .number span')[1].innerText = budget
+    const width = Math.min(100, parseInt(sum / this.model.getItem(tag) * 100))
+    item.querySelector('.budget_fill').style.width = `${width}%`
   }
   clearExistingItems() {
     const items = this.listElement.querySelectorAll('.item')
@@ -735,39 +741,52 @@ class BudgetsView {
     item.innerHTML = ''
     const displayAmount = asafonov.utils.displayMoney(amount)
     const displayZero = asafonov.utils.displayMoney(0)
-    const row = document.createElement('div')
-    row.className = 'row'
-    const n = document.createElement('div')
-    n.className = 'budget_name'
-    n.innerHTML = name
-    n.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
-    n.addEventListener('blur', this.onTitleChangedProxy)
-    n.setAttribute('contenteditable', 'true')
-    row.appendChild(n)
-    const a = document.createElement('div')
-    a.className = 'number with_left'
-    a.innerHTML = displayAmount
-    row.appendChild(a)
-    item.appendChild(row)
+    const row1 = document.createElement('div')
+    row1.className = 'section_row'
+    const nameEl = document.createElement('select')
+    for (let i = 0; i < this.categories.length; ++i) {
+      const opt = document.createElement('option')
+      opt.value = this.categories[i]
+      opt.text = this.categories[i]
+      this.categories[i] === name && (opt.setAttribute('selected', true))
+      nameEl.appendChild(opt)
+    }
+    nameEl.className = 'budget_name'
+    nameEl.addEventListener('change', this.onTitleChangedProxy)
+    nameEl.addEventListener('focus', event => event.currentTarget.setAttribute('data-value', event.currentTarget.value))
+    row1.appendChild(nameEl)
+    const amountEl = document.createElement('p')
+    amountEl.className = 'number left'
+    amountEl.innerHTML = displayZero
+    row1.appendChild(amountEl)
+    item.appendChild(row1)
     const row2 = document.createElement('div')
-    row2.className = 'row number dual'
-    row2.innerHTML = `${displayZero} `
-    const v = document.createElement('span')
-    v.innerHTML = displayAmount
-    row2.appendChild(v)
+    row2.className = 'budget_row'
+    const numberEl = document.createElement('p')
+    numberEl.className = 'number'
+    const span1 = document.createElement('span')
+    span1.innerHTML = displayZero + ' / '
+    numberEl.appendChild(span1)
+    const span2 = document.createElement('span')
+    span2.innerHTML = displayAmount
+    span2.addEventListener('blur', this.onValueChangedProxy)
+    span2.setAttribute('contenteditable', true)
+    numberEl.appendChild(span2)
+    row2.appendChild(numberEl)
+    const budgetLine = document.createElement('div')
+    budgetLine.className = 'budget_line'
+    const budgetFill = document.createElement('div')
+    budgetFill.className = 'budget_fill'
+    budgetLine.appendChild(budgetFill)
+    row2.appendChild(budgetLine)
     item.appendChild(row2)
-    const row3 = document.createElement('div')
-    row3.className = 'row progress_line'
-    row3.innerHTML = '<div class="filled"></div>'
-    item.appendChild(row3)
     if (! itemExists) {
       this.listElement.insertBefore(item, this.addButton)
     }
   }
   onTitleChanged (event) {
-    const title = event.currentTarget
-    const newValue = title.innerText.replace(/\n/g, '')
-    const originalValue = title.getAttribute('data-content')
+    const newValue = event.currentTarget.value
+    const originalValue = event.currentTarget.getAttribute('data-value')
     if (newValue !== originalValue) {
       if (newValue.length > 0) {
         this.model.updateId(originalValue, newValue)
@@ -779,13 +798,9 @@ class BudgetsView {
   }
   onValueChanged (event) {
     const value = event.currentTarget
-    const title = value.parentNode.parentNode.querySelector('.budget_name')
+    const title = value.parentNode.parentNode.parentNode.querySelector('.budget_name').value
     const newValue = value.innerText.replace(/\n/g, '')
-    const originalValue = value.getAttribute('data-content')
-    if (newValue !== originalValue) {
-      const amount = Math.round(parseFloat(newValue) * 100)
-      this.model.updateItem(title.innerHTML, amount)
-    }
+    this.model.updateItem(title, newValue)
   }
   updateList() {
     this.clearExistingItems()
@@ -1049,17 +1064,21 @@ class TransactionsView {
       this.listElement.parentNode.removeChild(this.listElement)
       return
     }
-    this.headerElement = this.listElement.querySelector('h1')
-    this.addButton = this.listElement.querySelector('.add')
+    this.headerElement = this.listElement.querySelector('h1').parentNode
+    this.addButton = this.listElement.querySelector('.add_link')
     this.incomeElement = document.querySelector('.income')
     this.expenseElement = document.querySelector('.expense')
     this.onAddButtonClickedProxy = this.onAddButtonClicked.bind(this)
-    this.onAmountChangedProxy = this.onAmountChanged.bind(this)
-    this.onAccountClickedProxy = this.onAccountClicked.bind(this)
-    this.onTagClickedProxy = this.onTagClicked.bind(this)
-    this.onItemDataChangedProxy = this.onItemDataChanged.bind(this)
-    this.closePopupProxy = this.closePopup.bind(this)
+    this.onValueChangeProxy = this.onValueChange.bind(this)
     this.addEventListeners()
+    this.updateAccounts()
+    this.updateCateories()
+  }
+  updateAccounts() {
+    this.accounts = Object.keys(asafonov.accounts.getList())
+  }
+  updateCateories() {
+    this.categories = asafonov.settings.getItem('categories')
   }
   addEventListeners() {
     this.updateEventListeners(true)
@@ -1095,81 +1114,24 @@ class TransactionsView {
       this.listElement.removeChild(items[i])
     }
   }
-  closePopup (event) {
-    const popup = this.listElement.querySelector('.monly-popup')
-    if (! popup || popup.contains(event.target)) {
-      return
-    }
-    window.removeEventListener('click', this.closePopupProxy)
-    const itemDiv = popup.parentNode.parentNode
-    const itemId = itemDiv.getAttribute('data-id')
-    this.renderItem(this.model.getItem(itemId), itemId)
-  }
-  onAccountClicked (event) {
-    this.showPopup(Object.keys(asafonov.accounts.getList()), event.currentTarget, e => this.onAccountSelected(e))
-  }
-  onAccountSelected (event) {
-    const account = event.currentTarget.innerHTML
-    const id = event.currentTarget.getAttribute('data-id')
-    this.model.updateItem(id, {account: account})
-    event.stopPropagation()
-  }
-  onTagClicked (event) {
-    const categories = asafonov.settings.getItem('categories')
-    this.showPopup(categories, event.currentTarget, e => this.onTagSelected(e))
-  }
-  onTagSelected (event) {
-    const tag = event.currentTarget.innerHTML
-    const id = event.currentTarget.getAttribute('data-id')
-    this.model.updateItem(id, {tag: tag})
-    event.stopPropagation()
-  }
-  showPopup (list, div, callback) {
-    if (list.length < 2 || document.querySelector('.monly-popup')) {
-      return
-    }
-    const selected = div.innerHTML
-    div.classList.add('monly-popup')
-    const select = document.querySelector('.templates .select').outerHTML
-    const opt = document.querySelector('.templates .opt').outerHTML
-    let options = ''
-    for (let i of list) {
-      if (i !== selected) {
-        options += opt.replace('{value}', i)
-      }
-    }
-    div.innerHTML = select.replace('{value}', selected).replace('{options}', options)
-    const opts = div.querySelectorAll('.opt')
-    for (let o of opts) {
-      o.setAttribute('data-id', div.parentNode.parentNode.getAttribute('data-id'))
-      o.addEventListener('click', callback)
-    }
-    window.addEventListener('click', this.closePopupProxy)
-  }
-  onAmountChanged (event) {
-    const element = event.currentTarget
-    const newValue = element.innerText.replace(/\n/g, '')
-    const originalValue = element.getAttribute('data-content')
-    const id = element.parentNode.parentNode.getAttribute('data-id')
-    if (newValue !== originalValue) {
-      const amount = Math.round(parseFloat(newValue) * 100)
-      this.model.updateItem(id, {amount: amount})
-    }
-  }
-  onItemDataChanged (event) {
-    const element = event.currentTarget
-    const newValue = element.innerText.replace(/\n/g, '')
-    const originalValue = element.getAttribute('data-content')
-    const id = element.parentNode.parentNode.getAttribute('data-id')
-    const name = element.getAttribute('data-name')
-    if (newValue !== originalValue) {
-      let data = {}
-      data[name] = newValue
-      this.model.updateItem(id, data)
-    }
-  }
   genItemId (id) {
     return `item_${id}`
+  }
+  onValueChange (event) {
+    const value = event.currentTarget.value || event.currentTarget.innerText
+    const name = event.currentTarget.getAttribute('data-name')
+    let el = event.currentTarget
+    let id
+    while (!id) {
+      el = el.parentNode
+      id = el.getAttribute('data-id')
+    }
+    const data = this.model.getItem(id)
+    if (data[name] !== value) {
+      const newData = {}
+      newData[name] = value
+      this.model.updateItem(id, newData)
+    }
   }
   renderItem (item, i) {
     const itemId = this.genItemId(i)
@@ -1177,55 +1139,65 @@ class TransactionsView {
     let itemAdded = true
     if (! itemDiv) {
       itemDiv = document.createElement('div')
-      itemDiv.className = 'item'
+      itemDiv.className = 'section_row transaction item'
       itemDiv.setAttribute('data-id', i)
       itemDiv.id = itemId
       itemAdded = false
     }
     itemDiv.innerHTML = ''
-    const row1 = document.createElement('div')
-    row1.className = 'row'
-    const dateDiv = document.createElement('div')
-    dateDiv.className = 'first_coll'
-    dateDiv.innerHTML = item.date
-    row1.appendChild(dateDiv)
-    const accountDiv = document.createElement('div')
-    accountDiv.className = 'second_coll small'
-    accountDiv.innerHTML = item.account
-    accountDiv.addEventListener('click', this.onAccountClickedProxy)
-    row1.appendChild(accountDiv)
-    const amountDiv = document.createElement('div')
-    amountDiv.className = 'third_coll number'
-    amountDiv.innerHTML = asafonov.utils.displayMoney(Math.abs(item.amount))
-    amountDiv.setAttribute('contenteditable', 'true')
-    amountDiv.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
-    amountDiv.addEventListener('blur', this.onAmountChangedProxy)
-    row1.appendChild(amountDiv)
-    itemDiv.appendChild(row1)
-    const row2 = document.createElement('div')
-    row2.className = 'row'
+    const col1 = document.createElement('div')
+    col1.className = 'transaction_coll'
+    const dateEl = document.createElement('input')
+    dateEl.value = item.date
+    dateEl.setAttribute('type', 'date')
+    dateEl.setAttribute('data-name', 'date')
+    dateEl.addEventListener('change', this.onValueChangeProxy)
+    col1.appendChild(dateEl)
     const posDiv = document.createElement('div')
-    posDiv.className = 'first_coll small'
-    posDiv.innerHTML = item.pos
-    posDiv.setAttribute('data-name', 'pos')
-    posDiv.setAttribute('contenteditable', 'true')
-    posDiv.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
-    posDiv.addEventListener('blur', this.onItemDataChangedProxy)
-    row2.appendChild(posDiv)
-    const tagDiv = document.createElement('div')
-    tagDiv.className = 'second_coll small'
-    tagDiv.innerHTML = item.tag
-    tagDiv.addEventListener('click', this.onTagClickedProxy)
-    row2.appendChild(tagDiv)
-    const icoDiv = document.createElement('div')
-    icoDiv.className = 'third_coll ico_container'
-    row2.appendChild(icoDiv)
-    const ico = document.createElement('div')
-    ico.classList.add('trans_' + item.type)
-    ico.classList.add('svg')
-    icoDiv.appendChild(ico)
-    itemDiv.appendChild(row2)
-    if (! itemAdded && !! this.addButton) this.addButton.after(itemDiv)
+    const posInput = document.createElement('input')
+    posInput.value = item.pos
+    posInput.setAttribute('data-name', 'pos')
+    posInput.addEventListener('change', this.onValueChangeProxy)
+    posDiv.appendChild(posInput)
+    col1.appendChild(posDiv)
+    itemDiv.appendChild(col1)
+    const col2 = document.createElement('div')
+    col2.className = 'transaction_coll'
+    const accountEl = document.createElement('select')
+    for (let i = 0; i < this.accounts.length; ++i) {
+      const opt = document.createElement('option')
+      opt.value = this.accounts[i]
+      opt.text = this.accounts[i]
+      this.accounts[i] === item.account && (opt.setAttribute('selected', true))
+      accountEl.appendChild(opt)
+    }
+    accountEl.setAttribute('data-name', 'account')
+    accountEl.addEventListener('change', this.onValueChangeProxy)
+    col2.appendChild(accountEl)
+    const categoryEl = document.createElement('select')
+    for (let i = 0; i < this.categories.length; ++i) {
+      const opt = document.createElement('option')
+      opt.value = this.categories[i]
+      opt.text = this.categories[i]
+      this.categories[i] === item.tag && (opt.setAttribute('selected', true))
+      categoryEl.appendChild(opt)
+    }
+    categoryEl.setAttribute('data-name', 'tag')
+    categoryEl.addEventListener('change', this.onValueChangeProxy)
+    col2.appendChild(categoryEl)
+    itemDiv.appendChild(col2)
+    const col3 = document.createElement('div')
+    col3.className = 'transaction_coll'
+    const amountEl = document.createElement('p')
+    amountEl.className = 'number'
+    amountEl.setAttribute('contenteditable', true)
+    amountEl.setAttribute('data-name', 'amount')
+    amountEl.innerHTML = asafonov.utils.displayMoney(item.amount)
+    amountEl.addEventListener('focus', event => event.currentTarget.setAttribute('data-content', event.currentTarget.innerText.replace(/\n/g, '')))
+    amountEl.addEventListener('blur', this.onValueChangeProxy)
+    col3.appendChild(amountEl)
+    itemDiv.appendChild(col3)
+    if (! itemAdded && !! this.headerElement) this.headerElement.after(itemDiv)
   }
   updateList() {
     this.clearExistingItems()
@@ -1261,7 +1233,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '1.27'
+window.asafonov.version = '2.0'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
