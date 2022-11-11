@@ -369,7 +369,14 @@ class Updater {
   compareVersion (v1, v2) {
     const _v1 = v1.split('.')
     const _v2 = v2.split('.')
-    return parseInt(_v1[0], 10) > parseInt(_v2[0], 10) || parseInt(_v1[1], 10) > parseInt(_v2[1], 10)
+    let ret = false
+    for (let i = 0; i < _v1.length; ++i) {
+      if (parseInt(_v1[i], 10) > parseInt(_v2[i], 10)) {
+        ret = true
+        break
+      }
+    }
+    return ret
   }
   getUpdateUrl (template) {
     return template.replace('{VERSION}', this.upstreamVersion)
