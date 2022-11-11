@@ -367,12 +367,12 @@ class Updater {
       .then(data => data.replace(/[^0-9\.]/g, ''))
   }
   compareVersion (v1, v2) {
-    const _v1 = v1.split('.')
-    const _v2 = v2.split('.')
+    const _v1 = v1.split('.').map(i => parseInt(i, 10))
+    const _v2 = v2.split('.').map(i => parseInt(i, 10))
     let ret = false
     for (let i = 0; i < _v1.length; ++i) {
-      if (parseInt(_v1[i], 10) > parseInt(_v2[i], 10)) {
-        ret = true
+      if (_v1[i] !== _v2[i]) {
+        ret = _v1[i] > _v2[i]
         break
       }
     }
