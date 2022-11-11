@@ -120,7 +120,7 @@ select {
   border: none;
   cursor: pointer;
   outline: none;
-
+  max-width: 100%;
   z-index: 9;
   background-image: url(ico_arrow.svg);
   background-repeat: no-repeat;

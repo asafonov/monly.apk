@@ -1157,6 +1157,7 @@ class TransactionsView {
     const posInput = document.createElement('input')
     posInput.value = item.pos
     posInput.setAttribute('data-name', 'pos')
+    posInput.setAttribute('size', '1')
     posInput.addEventListener('change', this.onValueChangeProxy)
     posDiv.appendChild(posInput)
     col1.appendChild(posDiv)
