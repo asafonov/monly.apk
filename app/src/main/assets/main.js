@@ -276,7 +276,8 @@ class Settings extends AbstractList {
       },
       default_account: null,
       account_rate: {},
-      categories: ['Groceries', 'Transport', 'Travel', 'Utilities', 'Gas', 'Health', 'Fun', 'Presents', 'Clothes']
+      categories: ['Groceries', 'Transport', 'Travel', 'Utilities', 'Gas', 'Health', 'Fun', 'Presents', 'Clothes'],
+      theme: 'light'
     })
   }
   async initCurrencyRates() {
@@ -948,10 +949,12 @@ class ReportsView {
 class SettingsView {
   constructor() {
     this.model = asafonov.settings
+    this.themeView = new ThemeView()
     this.mainScreen = document.querySelector('.settings-mainscreen')
     this.defaultAccountScreen = document.querySelector('.settings-default-account')
     this.accountRateScreen = document.querySelector('.settings-account-rate')
     this.categoriesScreen = document.querySelector('.settings-categories')
+    this.themeScreen = document.querySelector('.settings-theme')
   }
   _createUnderline() {
     const underline = document.createElement('div')
@@ -1039,21 +1042,20 @@ class SettingsView {
   showCategoriesScreen() {
     this.categoriesScreen.innerHTML = '<h1>categories</h1>'
     const items = this.model.getItem('categories')
+    let isFirst = true
     for (let i of items) {
-      const div = document.createElement('div')
-      div.className = 'item'
-      div.innerHTML = `<div>${i}</div>`
-      this.categoriesScreen.appendChild(div)
-      div.addEventListener('click', () => {
+      this.categoriesScreen.appendChild(this._createLine(i, isFirst, async event => {
         if (confirm(`Delete category "${i}"?`)) {
           items.splice(items.indexOf(i), 1)
           this.model.updateItem('categories', items)
           this.showCategoriesScreen()
         }
-      })
+      }))
+      isFirst = false
+      this.categoriesScreen.appendChild(this._createUnderline())
     }
-    const addButton = document.createElement('div')
-    addButton.className = 'add'
+    const addButton = document.createElement('a')
+    addButton.className = 'add_link'
     addButton.innerHTML = 'add category'
     this.categoriesScreen.appendChild(addButton)
     addButton.addEventListener('click', () => {
@@ -1065,11 +1067,42 @@ class SettingsView {
       }
     })
   }
+  showThemeScreen() {
+    const themes = ['light', 'dark']
+    this.themeScreen.innerHTML = '<h1>theme</h1>'
+    const theme = this.model.getItem('theme')
+    let isFirst = true
+    for (let i of themes) {
+      if (! isFirst) {
+        this.themeScreen.appendChild(this._createUnderline())
+      }
+      this.themeScreen.appendChild(this._createCheckbox(i, i === theme, isFirst, event => {
+        const items = this.themeScreen.querySelectorAll('input[type=checkbox]')
+        for (let i of items) {
+          i.checked = false
+        }
+        event.currentTarget.checked = true
+        this.model.updateItem('theme', i)
+        this.themeView.apply(i)
+      }))
+      isFirst = false
+    }
+  }
   show() {
     this.showMainScreen()
     this.showDefaultAccountScreen()
     this.showAccountRateScreen()
     this.showCategoriesScreen()
+    this.showThemeScreen()
+  }
+}
+class ThemeView {
+  constructor() {
+    const theme = asafonov.settings.getItem('theme')
+    this.apply(theme)
+  }
+  apply (theme) {
+    document.querySelector('body').className = `${theme}_theme`
   }
 }
 class TransactionsView {
@@ -1295,6 +1328,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
       transactionsView.updateList()
       const reportsController = new ReportsController()
       reportsController.build()
+      const themeView = new ThemeView()
     },
     charts_page: async () => {
       asafonov.settings = new Settings()
