@@ -214,6 +214,29 @@ input[type=date] {
   font-weight: 300;
 }
 
+input[type=checkbox] {
+  width: 30px;
+  height: 30px;
+}
+
+input[type=checkbox] {
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  max-width: 100%;
+  z-index: 9;
+  background-repeat: no-repeat;
+  background-size: var(--size_s2);
+  background-position: center right;
+  padding-right: var(--size_s1);
+}
+
+input[type=checkbox]:checked {
+  background-image: url(ico_checked.svg);
+}
+
 .clear:after {  clear: both;
   content: " ";
   display: block;
