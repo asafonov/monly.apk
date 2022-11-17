@@ -1315,6 +1315,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
   const loader = {
     main_page: async () => {
       asafonov.settings = new Settings()
+      const themeView = new ThemeView()
       await asafonov.settings.initCurrencyRates()
       const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
       updaterView.showUpdateDialogIfNeeded()
@@ -1328,10 +1329,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
       transactionsView.updateList()
       const reportsController = new ReportsController()
       reportsController.build()
-      const themeView = new ThemeView()
     },
     charts_page: async () => {
       asafonov.settings = new Settings()
+      const themeView = new ThemeView()
       await asafonov.settings.initCurrencyRates()
       const reportsView = new ReportsView()
       reportsView.show()
