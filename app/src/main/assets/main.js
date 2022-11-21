@@ -1291,7 +1291,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '2.0'
+window.asafonov.version = '2.1'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {

@@ -19,7 +19,7 @@
   --size_2: max(3.75vw, 3.75vh);  /* 25px */
   --size_3: max(4.65vw, 4.65vh);  /* 31px */
   --size_4: max(6vw, 6vh);        /* 40px */
-  --size_chart: max(50vw, 50vh); 
+  --size_chart: max(50vw, 50vh);
 
   --border: max(0.15vw, 0.15vh);
 
@@ -137,7 +137,7 @@ select {
   background-image: url(ico_arrow.svg);
   background-repeat: no-repeat;
   background-size: var(--size_s2);
-  background-position: center right;  
+  background-position: center right;
 }
 
 .select select {
@@ -384,6 +384,14 @@ h2.left::before {
   font-size: var(--size_s1);
 }
 
+.transaction_coll select + select {
+  font-size: var(--size_0);
+}
+
+.transaction_coll .number {
+  font-size: calc(var(--size_0)*0.9);
+}
+
 .not_set {
   opacity: 0.5;
 }
@@ -457,7 +465,7 @@ h2.left::before {
 
 .chart_donut svg:nth-child(3) circle {
   stroke: var(--color_3);
-  animation-name: visib, part3;  
+  animation-name: visib, part3;
   animation-delay: 2s;
 }
 
@@ -560,11 +568,3 @@ h2.left::before {
   animation-name: disp;
   animation-delay: 4s;
 }
-
-
-
-
-
-
-
-
