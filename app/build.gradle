@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "org.asafonov.monly"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 39
         versionName "2.1"
     }
