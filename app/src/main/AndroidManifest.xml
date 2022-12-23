@@ -15,6 +15,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name="org.asafonov.monly.MainActivity"
+            android:windowSoftInputMode="adjustNothing"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
             android:label="@string/app_name"
             android:exported="true"
