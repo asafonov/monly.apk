@@ -1,0 +1,1 @@
+Added setting to control updates within the app. Disabled by default

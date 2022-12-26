@@ -277,7 +277,8 @@ class Settings extends AbstractList {
       default_account: null,
       account_rate: {},
       categories: ['Groceries', 'Transport', 'Travel', 'Utilities', 'Gas', 'Health', 'Fun', 'Presents', 'Clothes'],
-      theme: 'light'
+      theme: 'light',
+      show_update_dialog: false
     })
   }
   async initCurrencyRates() {
@@ -955,6 +956,7 @@ class SettingsView {
     this.accountRateScreen = document.querySelector('.settings-account-rate')
     this.categoriesScreen = document.querySelector('.settings-categories')
     this.themeScreen = document.querySelector('.settings-theme')
+    this.additionalSettingsScreen = document.querySelector('.settings-additional')
   }
   _createUnderline() {
     const underline = document.createElement('div')
@@ -1078,8 +1080,8 @@ class SettingsView {
       }
       this.themeScreen.appendChild(this._createCheckbox(i, i === theme, isFirst, event => {
         const items = this.themeScreen.querySelectorAll('input[type=checkbox]')
-        for (let i of items) {
-          i.checked = false
+        for (let c of items) {
+          c.checked = false
         }
         event.currentTarget.checked = true
         this.model.updateItem('theme', i)
@@ -1088,12 +1090,22 @@ class SettingsView {
       isFirst = false
     }
   }
+  showAdditionalSettingsScreen() {
+    this.additionalSettingsScreen.innerHTML = '<h1>additional settings</h1>'
+    let showUpdateDialog = this.model.getItem('show_update_dialog')
+    this.additionalSettingsScreen.appendChild(this._createCheckbox('Update within the app', showUpdateDialog, true, event => {
+      showUpdateDialog = ! showUpdateDialog
+      this.model.updateItem('show_update_dialog', showUpdateDialog)
+      event.currentTarget.checked = showUpdateDialog
+    }))
+  }
   show() {
     this.showMainScreen()
     this.showDefaultAccountScreen()
     this.showAccountRateScreen()
     this.showCategoriesScreen()
     this.showThemeScreen()
+    this.showAdditionalSettingsScreen()
   }
 }
 class ThemeView {
@@ -1291,7 +1303,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '2.2'
+window.asafonov.version = '2.3'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
@@ -1317,8 +1329,12 @@ document.addEventListener("DOMContentLoaded", function (event) {
       asafonov.settings = new Settings()
       const themeView = new ThemeView()
       await asafonov.settings.initCurrencyRates()
-      const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
-      updaterView.showUpdateDialogIfNeeded()
+
+      if (asafonov.settings.getItem('show_update_dialog')) {
+        const updaterView = new UpdaterView('https://raw.githubusercontent.com/asafonov/monly/master/VERSION.txt', 'https://github.com/asafonov/monly.apk/releases/download/{VERSION}/app-release.apk')
+        updaterView.showUpdateDialogIfNeeded()
+      }
+
       asafonov.accounts = new Accounts()
       const accountsController = new AccountsController()
       const accountsView = new AccountsView()
