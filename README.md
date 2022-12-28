@@ -2,7 +2,7 @@ Monly
 -----
 
 Monly is an awesome budget planner. It supports transactions logging, budgets, reports, synchronization across your devices and a lot of other features.
-Monly is distributed so every device has it’s own copy of data. You may loose a device, but not your data.
+Monly is distributed so every device has its own copy of data. You may loose a device, but not your data.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
