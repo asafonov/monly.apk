@@ -7,8 +7,8 @@ android {
         applicationId "org.asafonov.monly"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 41
-        versionName "2.3"
+        versionCode 42
+        versionName "2.4"
     }
     buildTypes {
         release {

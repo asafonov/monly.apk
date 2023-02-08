@@ -417,86 +417,28 @@ h2.left::before {
   fill: transparent;
   stroke-width: 16%;
   stroke: var(--color_1);
-  stroke-dasharray: calc(6 * 42%);
+}
+
+.chart_donut svg:nth-of-type(2) circle {
+  stroke: var(--color_2);
+}
+
+.chart_donut svg:nth-of-type(3) circle {
+  stroke: var(--color_3);
+}
+
+.chart_donut svg:nth-of-type(4) circle {
+  stroke: var(--color_4);
+}
+
+.chart_donut svg:nth-of-type(5) circle {
+  stroke: var(--color_5);
 }
 
 .chart_donut svg circle {
   cx: 50%;
   cy: 50%;
   r: 40%;
-  visibility: hidden;
-  animation-duration: 1s;
-  animation-timing-function: linear;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
-}
-
-@keyframes visib {
-  from {visibility: hidden;}
-  to {visibility: visible;}
-}
-
-@keyframes part1 {
-  from { stroke-dashoffset: 0;}
-  to { stroke-dashoffset: -125.5;}
-}
-@keyframes part2 {
-  from { stroke-dashoffset: 0;}
-  to { stroke-dashoffset: -62.75;}
-}
-@keyframes part3 {
-  from { stroke-dashoffset: 0;}
-  to { stroke-dashoffset: -31.38;}
-}
-@keyframes part4 {
-  from { stroke-dashoffset: 0;}
-  to { stroke-dashoffset: -15.69;}
-}
-
-.chart_donut svg:nth-child(1) circle {
-  animation-name: visib, part1;
-}
-
-.chart_donut svg:nth-child(2) circle {
-  stroke: var(--color_2);
-  animation-name: visib, part2;
-  animation-delay: 1s;
-}
-
-.chart_donut svg:nth-child(3) circle {
-  stroke: var(--color_3);
-  animation-name: visib, part3;
-  animation-delay: 2s;
-}
-
-.chart_donut svg:nth-child(4) circle {
-  stroke: var(--color_4);
-  animation-name: visib, part4;
-  animation-delay: 3s;
-}
-
-.chart_donut svg:nth-child(5) circle {
-  stroke: var(--color_5);
-  animation-name: visib, part4;
-  animation-delay: 4s;
-}
-
-@keyframes count {
-  0% {content: "00.00";}
-  50% {content: "7 348.57";}
-  75% {content: "8 184.57";}
-  87.5% {content: "8 932.57";}
-  93.75% {content: "9 268.57";}
-  100% {content: "9 604.57";}
-}
-
-.chart_donut h2::after {
-  content: ".00";
-  animation-name: count;
-  animation-duration: 5s;
-  animation-timing-function: linear;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
 }
 
 .chart_row .dot {
@@ -529,42 +471,4 @@ h2.left::before {
 
 .chart_legend .legend_row:nth-of-type(5) .dot:before {
   background-color: var(--color_5);
-}
-
-.chart_legend .legend_row {
-  opacity: 0;
-  height: 0;
-  animation-duration: 1s;
-  animation-timing-function: linear;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
-}
-
-@keyframes disp {
-  from {}
-  to {opacity: 1; height: fit-content;}
-}
-
-.chart_legend .legend_row:nth-of-type(1) {
-  animation-name: disp;
-}
-
-.chart_legend .legend_row:nth-of-type(2) {
-  animation-name: disp;
-  animation-delay: 1s;
-}
-
-.chart_legend .legend_row:nth-of-type(3) {
-  animation-name: disp;
-  animation-delay: 2s;
-}
-
-.chart_legend .legend_row:nth-of-type(4) {
-  animation-name: disp;
-  animation-delay: 3s;
-}
-
-.chart_legend .legend_row:nth-of-type(5) {
-  animation-name: disp;
-  animation-delay: 4s;
 }

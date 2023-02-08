@@ -838,16 +838,13 @@ class ReportsView {
   constructor() {
     this.model = new Reports()
     this.controller = new ReportsController()
-    this.circleLen = 30 * 0.42 * 2 * Math.PI
-    this.popup = document.querySelector('.select')
-    this.options = this.popup.querySelector('.options')
-    this.active = this.popup.querySelector('.active')
-    this.togglePopupProxy = this.togglePopup.bind(this)
-    this.addEventListeners()
+    this.circleLen = 251
+    this.circleDeg = 360
     this.initAvailableReports()
   }
   initAvailableReports() {
     const availableReports = this.controller.availableReports()
+    return
     const availableReportsMap = {}
     for (let i = 0; i < availableReports.length; ++i) {
       availableReportsMap[availableReports[i]] = true
@@ -870,36 +867,20 @@ class ReportsView {
     this.model.destroy()
     this.model = new Reports(y, m)
     this.show()
-    this.togglePopup()
-    this.active.innerHTML = this.options.querySelector(`.m${m}`).innerHTML + ' ' + y
-  }
-  addEventListeners() {
-    this.active.addEventListener('click', this.togglePopupProxy)
-  }
-  removeEventListeners() {
-    this.active.removeEventListener('click', this.togglePopupProxy)
-  }
-  togglePopup() {
-    this.popup.classList.toggle('monly-popup')
   }
   clearExistingItems() {
-    const items = this.element.querySelectorAll('.item')
-    for (let i = 0; i < items.length; ++i) {
-      this.element.removeChild(items[i])
-    }
+    this.legendElement.innerHTML = ''
   }
   showExpenses() {
-    this.element = document.querySelector('.expenses.monly-circle')
-    this.circleElement = this.element.querySelector('.donut.chart svg')
-    this.totalElement = this.element.querySelector('.number.big')
-    this.donutElement = this.element.querySelector('.donut.chart')
+    this.element = document.querySelector('.monly-expenses')
+    this.donutElement = this.element.querySelector('.chart_donut')
+    this.legendElement = this.element.querySelector('.chart_legend')
     this.showChart(i => i > 0)
   }
   showIncome() {
-    this.element = document.querySelector('.income.monly-circle')
-    this.circleElement = this.element.querySelector('.donut.chart svg')
-    this.totalElement = this.element.querySelector('.number.big')
-    this.donutElement = this.element.querySelector('.donut.chart')
+    this.element = document.querySelector('.monly-income')
+    this.donutElement = this.element.querySelector('.chart_donut')
+    this.legendElement = this.element.querySelector('.chart_legend')
     this.showChart(i => i < 0)
   }
   show() {
@@ -907,44 +888,49 @@ class ReportsView {
     this.showIncome()
   }
   showChart (proceedFunction) {
-    this.circleElement.innerHTML = ''
+    this.donutElement.innerHTML = ''
     this.clearExistingItems()
     this.model.build()
     const data = this.model.getItem(0)
+    if (! data) {
+      this.donutElement.innerHTML += `<h2>No data</h2>`
+      return
+    }
     const subtotal = Object.values(data).filter(proceedFunction).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
     const total = Math.abs(subtotal)
-    let i = 1
-    let offset = 0
-    this.totalElement.innerHTML = asafonov.utils.displayMoney(total)
+    let degOffset = -90
+    let totalFraction = 0
     const keys = Object.keys(data)
     keys.sort((a, b) => Math.abs(data[a]) - Math.abs(data[b]))
-    for (let item of keys) {
+    for (let i = 0; i < keys.length; ++i) {
+      const item = keys[i]
       if (! proceedFunction(data[item])) continue
       const value = Math.abs(data[item])
-      const lineLen = value / total * this.circleLen
-      const spaceLen = this.circleLen - lineLen
+      const fraction = value / total
+      const lineLen = fraction * this.circleLen
+      const deg = fraction * this.circleDeg
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svg.setAttribute('viewBox', '0 0 100 100')
+      svg.setAttribute('style', `transform: rotate(-90deg)`)
       const circle = document.createElement('circle')
-      circle.className = `slice_${i}`
-      circle.style.strokeDasharray = `${lineLen} ${spaceLen}`
-      circle.style.strokeDashoffset = offset
-      this.circleElement.innerHTML += circle.outerHTML
+      circle.setAttribute('stroke-dasharray', `${fraction * this.circleLen} ${this.circleLen - fraction * this.circleLen}`)
+      circle.style.strokeDashoffset = `-${totalFraction * this.circleLen}`
+      degOffset += deg
+      totalFraction += fraction
+      svg.appendChild(circle)
+      this.donutElement.appendChild(svg)
       const itemDiv = document.createElement('div')
-      itemDiv.className = 'item'
-      itemDiv.innerHTML = `<div><span class="bullet slice_${i}"></span>${item}</div>`
       const displayMoney = asafonov.utils.displayMoney(value)
-      itemDiv.innerHTML += `<div class="number">${displayMoney}</div>`
-      this.donutElement.after(itemDiv)
-      offset -= lineLen
-      i = i % 11 + 1
+      const underline = i < keys.length - 1 ? '<div class="underline"></div>' : ''
+      itemDiv.className = 'legend_row'
+      itemDiv.innerHTML = `<div class="section_row chart_row"><p class="dot">${item}</p><p class="number">${displayMoney}</p></div>${underline}`
+      this.legendElement.appendChild(itemDiv)
     }
-    const circle = document.createElement('circle')
-    circle.className = 'slice_f'
-    this.circleElement.innerHTML += circle.outerHTML
+    this.donutElement.innerHTML += `<h2>${asafonov.utils.displayMoney(total)}</h2>`
   }
   destroy() {
     this.model.destroy()
     this.controller.destroy()
-    this.removeEventListeners()
   }
 }
 class SettingsView {
@@ -1093,7 +1079,7 @@ class SettingsView {
   showAdditionalSettingsScreen() {
     this.additionalSettingsScreen.innerHTML = '<h1>additional settings</h1>'
     let showUpdateDialog = this.model.getItem('show_update_dialog')
-    this.additionalSettingsScreen.appendChild(this._createCheckbox('Update within the app', showUpdateDialog, true, event => {
+    this.additionalSettingsScreen.appendChild(this._createCheckbox('update within the app', showUpdateDialog, true, event => {
       showUpdateDialog = ! showUpdateDialog
       this.model.updateItem('show_update_dialog', showUpdateDialog)
       event.currentTarget.checked = showUpdateDialog
@@ -1303,7 +1289,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '2.3'
+window.asafonov.version = '2.4'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
