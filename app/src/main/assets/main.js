@@ -862,7 +862,6 @@ class ReportsView {
     const year = (new Date().getFullYear()) + ''
     const month = asafonov.utils.padlen((new Date().getMonth() + 1) + '', 2, '0')
     for (let i = 0; i < availableReports.length; ++i) {
-      alert(availableReports[i])
       const y = availableReports[i].substr(0, 4)
       const m = availableReports[i].substr(4)
       const isCurrentMonth = y === year && month === m
