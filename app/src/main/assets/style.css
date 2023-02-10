@@ -435,6 +435,26 @@ h2.left::before {
   stroke: var(--color_5);
 }
 
+.chart_donut svg:nth-of-type(6) circle {
+  stroke: var(--color_6);
+}
+
+.chart_donut svg:nth-of-type(7) circle {
+  stroke: var(--color_7);
+}
+
+.chart_donut svg:nth-of-type(8) circle {
+  stroke: var(--color_8);
+}
+
+.chart_donut svg:nth-of-type(9) circle {
+  stroke: var(--color_9);
+
+}
+.chart_donut svg:nth-of-type(10) circle {
+  stroke: var(--color_10);
+}
+
 .chart_donut svg circle {
   cx: 50%;
   cy: 50%;
@@ -471,4 +491,24 @@ h2.left::before {
 
 .chart_legend .legend_row:nth-of-type(5) .dot:before {
   background-color: var(--color_5);
+}
+
+.chart_legend .legend_row:nth-of-type(6) .dot:before {
+  background-color: var(--color_6);
+}
+
+.chart_legend .legend_row:nth-of-type(7) .dot:before {
+  background-color: var(--color_7);
+}
+
+.chart_legend .legend_row:nth-of-type(8) .dot:before {
+  background-color: var(--color_8);
+}
+
+.chart_legend .legend_row:nth-of-type(9) .dot:before {
+  background-color: var(--color_9);
+}
+
+.chart_legend .legend_row:nth-of-type(10) .dot:before {
+  background-color: var(--color_10);
 }

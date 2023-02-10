@@ -839,28 +839,38 @@ class ReportsView {
     this.model = new Reports()
     this.controller = new ReportsController()
     this.circleLen = 251
-    this.circleDeg = 360
+    this.dateElement = document.querySelector('.monly-date')
+    this.onDateChangedProxy = this.onDateChanged.bind(this)
+    this.addEventListeners()
     this.initAvailableReports()
+  }
+  addEventListeners() {
+    this.dateElement.addEventListener('change', this.onDateChangedProxy)
+  }
+  removeEventListeners() {
+    this.dateElement.removeEventListener('change', this.onDateChangedProxy)
+  }
+  onDateChanged() {
+    const value = this.dateElement.value
+    const y = value.substr(0, 4)
+    const m = value.substr(4)
+    this.loadReport(m, y)
   }
   initAvailableReports() {
     const availableReports = this.controller.availableReports()
-    return
-    const availableReportsMap = {}
+    availableReports.sort()
+    const year = (new Date().getFullYear()) + ''
+    const month = asafonov.utils.padlen((new Date().getMonth() + 1) + '', 2, '0')
     for (let i = 0; i < availableReports.length; ++i) {
-      availableReportsMap[availableReports[i]] = true
-    }
-    const year = new Date().getFullYear()
-    this.options.querySelector('.year').innerHTML = year
-    for (let i = 1; i < 13; ++i) {
-      const m = asafonov.utils.padlen(i + '', 2, '0')
-      const c = `.m${m}`
-      const k = `${year}${m}`
-      const isReportAvailable = availableReportsMap[k]
-      const month = this.options.querySelector(c)
-      month.style.display = isReportAvailable ? 'block' : 'none'
-      if (isReportAvailable) {
-        month.addEventListener('click', () => this.loadReport(m, year))
-      }
+      alert(availableReports[i])
+      const y = availableReports[i].substr(0, 4)
+      const m = availableReports[i].substr(4)
+      const isCurrentMonth = y === year && month === m
+      const option = document.createElement('option')
+      option.value = availableReports[i]
+      option.innerHTML = isCurrentMonth ? 'this month' : `${y} - ${m}`
+      isCurrentMonth && option.setAttribute('selected', 'selected')
+      this.dateElement.appendChild(option)
     }
   }
   loadReport (m, y) {
@@ -898,7 +908,6 @@ class ReportsView {
     }
     const subtotal = Object.values(data).filter(proceedFunction).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
     const total = Math.abs(subtotal)
-    let degOffset = -90
     let totalFraction = 0
     const keys = Object.keys(data)
     keys.sort((a, b) => Math.abs(data[a]) - Math.abs(data[b]))
@@ -907,15 +916,12 @@ class ReportsView {
       if (! proceedFunction(data[item])) continue
       const value = Math.abs(data[item])
       const fraction = value / total
-      const lineLen = fraction * this.circleLen
-      const deg = fraction * this.circleDeg
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
       svg.setAttribute('viewBox', '0 0 100 100')
       svg.setAttribute('style', `transform: rotate(-90deg)`)
       const circle = document.createElement('circle')
       circle.setAttribute('stroke-dasharray', `${fraction * this.circleLen} ${this.circleLen - fraction * this.circleLen}`)
       circle.style.strokeDashoffset = `-${totalFraction * this.circleLen}`
-      degOffset += deg
       totalFraction += fraction
       svg.appendChild(circle)
       this.donutElement.appendChild(svg)
@@ -929,6 +935,7 @@ class ReportsView {
     this.donutElement.innerHTML += `<h2>${asafonov.utils.displayMoney(total)}</h2>`
   }
   destroy() {
+    this.removeEventListeners()
     this.model.destroy()
     this.controller.destroy()
   }
@@ -1289,7 +1296,7 @@ class UpdaterView {
   }
 }
 window.asafonov = {}
-window.asafonov.version = '2.4'
+window.asafonov.version = '2.5'
 window.asafonov.utils = new Utils()
 window.asafonov.messageBus = new MessageBus()
 window.asafonov.events = {
