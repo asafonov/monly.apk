@@ -152,41 +152,35 @@ class Budgets extends AbstractList {
   }
 }
 class Currency {
-  buildUrl (base, symbol) {
-    return `https://api.exchangerate.host/lates?base=${base}&symbols=${symbol}`
-  }
-  parseResponse (data, symbol) {
-    return data.rates[symbol]
+  buildUrl (base) {
+    return `http://isengard.asafonov.org:8000/?base=${base}`
   }
   getFromCache (base, symbol) {
-    const k = `currency_${base}${symbol}`
+    const k = `currency_${base}`
     const cache = JSON.parse(window.localStorage.getItem(k)) || {}
     const t = cache.t || 0
     const now = new Date().getTime()
     if (t + 12 * 3600 * 1000 > now) {
-      return [cache.value, cache.value]
+      return cache.rates[symbol]
     }
-    return [null, cache.value || 1]
+    return null
   }
-  saveToCache (base, symbol, value) {
+  async getRates (base) {
+    const url = this.buildUrl(base)
+    const response = await fetch(url)
+    const data = await response.json()
+    const k = `currency_${base}`
     const cache = {
       t: new Date().getTime(),
-      value: value
+      rates: data
     }
-    const k = `currency_${base}${symbol}`
     window.localStorage.setItem(k, JSON.stringify(cache))
   }
   async convert (base, symbol) {
-    let [ret, cache] = this.getFromCache(base, symbol)
+    let ret = this.getFromCache(base, symbol)
     if (ret) return ret
-    const url = this.buildUrl(base, symbol)
-    try {
-      const response = await fetch(url)
-      const data = await response.json()
-      ret = this.parseResponse(data, symbol)
-      if (ret) this.saveToCache(base, symbol, ret)
-    } catch (e) {}
-    return ret || cache || 1
+    await this.getRates(base)
+    return this.getFromCache(base, symbol) || 1
   }
   trim (value) {
     return this.isRateNeeded(value) ? value.substr(0, 6) : parseFloat(value)
@@ -328,7 +322,7 @@ class Transactions extends AbstractPeriodList {
     const accountRate = asafonov.settings.getItem('account_rate')
     for (let i = 0; i < this.list.length; ++i) {
       const tag = this.list[i].tag.trim()
-      tags[tag] = (tags[tag] || 0) + this.list[i].amount * (accountRate[this.list[i].account] || 1)
+      tags[tag] = (tags[tag] || 0) + this.list[i].amount / (accountRate[this.list[i].account] || 1)
     }
     return tags
   }
@@ -353,7 +347,7 @@ class Transactions extends AbstractPeriodList {
   }
   sum (func) {
     const accountRate = asafonov.settings.getItem('account_rate')
-    return this.list.filter(v => func(v)).map(v => v.amount * (accountRate[v.account] || 1)).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+    return this.list.filter(v => func(v)).map(v => v.amount / (accountRate[v.account] || 1)).reduce((accumulator, currentValue) => accumulator + currentValue, 0)
   }
 }
 class Updater {
@@ -580,7 +574,7 @@ class AccountsView {
     let total = 0
     const accountRate = this.settings.getItem('account_rate')
     for (let key in list) {
-      total += list[key] * (accountRate[key] || 1)
+      total += list[key] / (accountRate[key] || 1)
     }
     totalElement.innerHTML = asafonov.utils.displayMoney(total)
   }
