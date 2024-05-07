@@ -153,10 +153,10 @@ class Budgets extends AbstractList {
 }
 class Currency {
   buildUrl (base) {
-    return `http://isengard.asafonov.org:8000/?base=${base}`
+    return `http://isengard.asafonov.org:8000/exchangerates/?base=${base}`
   }
   getFromCache (base, symbol) {
-    const k = `currency_${base}`
+    const k = `currency`
     const cache = JSON.parse(window.localStorage.getItem(k)) || {}
     const t = cache.t || 0
     const now = new Date().getTime()
@@ -169,7 +169,7 @@ class Currency {
     const url = this.buildUrl(base)
     const response = await fetch(url)
     const data = await response.json()
-    const k = `currency_${base}`
+    const k = `currency`
     const cache = {
       t: new Date().getTime(),
       rates: data
@@ -183,15 +183,15 @@ class Currency {
     return this.getFromCache(base, symbol) || 1
   }
   trim (value) {
-    return this.isRateNeeded(value) ? value.substr(0, 6) : parseFloat(value)
+    return this.isRateNeeded(value) ? value.substr(0, 3) : parseFloat(value)
   }
   isRateNeeded (rateValue) {
-    return typeof rateValue === 'string' && rateValue.length >= 6 && rateValue.match(/[A-z]/g)
+    return typeof rateValue === 'string' && rateValue.length === 3 && rateValue.match(/[A-z]/g)
   }
   async initRate (rateValue) {
     if (this.isRateNeeded(rateValue)) {
-      const base = rateValue.substr(0, 3)
-      const symbol = rateValue.substr(3)
+      const base = asafonov.settings.getItem('default_currency')
+      const symbol = rateValue.substr(0, 3)
       const rate = await this.convert(base, symbol)
       return parseFloat(rate)
     } else {
@@ -269,6 +269,7 @@ class Settings extends AbstractList {
         transactions: true
       },
       default_account: null,
+      default_currency: 'USD',
       account_rate: {},
       categories: ['Groceries', 'Transport', 'Travel', 'Utilities', 'Gas', 'Health', 'Fun', 'Presents', 'Clothes'],
       theme: 'light',
@@ -939,6 +940,7 @@ class SettingsView {
     this.themeView = new ThemeView()
     this.mainScreen = document.querySelector('.settings-mainscreen')
     this.defaultAccountScreen = document.querySelector('.settings-default-account')
+    this.defaultCurrencyScreen = document.querySelector('.settings-default-currency')
     this.accountRateScreen = document.querySelector('.settings-account-rate')
     this.categoriesScreen = document.querySelector('.settings-categories')
     this.themeScreen = document.querySelector('.settings-theme')
@@ -967,8 +969,8 @@ class SettingsView {
     div.className = `section_row${isFirst ? ' no_number' : ''}`
     const p = document.createElement('p')
     p.innerHTML = title
-    p.addEventListener('click', onclick)
     div.appendChild(p)
+    div.addEventListener('click', onclick)
     return div
   }
   showMainScreen() {
@@ -1006,19 +1008,36 @@ class SettingsView {
       isFirst = false
     }
   }
-  showAccountRateScreen() {
-    this.accountRateScreen.innerHTML = '<h1>account rates</h1>'
-    const accounts = asafonov.accounts.getList()
+  showDefaultCurrencyScreen() {
     const currency = new Currency()
+    this.defaultCurrencyScreen.innerHTML = '<h1>default currency</h1>'
+    this.defaultCurrencyScreen.appendChild(
+      this._createLine(this.model.getItem('default_currency'), true, event => {
+        const c = this.model.getItem('default_currency')
+        let nc = prompt('Please enter new default currency', c)
+        if (nc) {
+          nc = currency.trim(nc)
+          this.model.updateItem('default_currency', nc)
+          event.currentTarget.querySelector('p').innerHTML = nc
+          if (nc !== c) currency.getRates(nc)
+        }
+      })
+    )
+  }
+  showAccountRateScreen() {
+    const currency = new Currency()
+    this.accountRateScreen.innerHTML = '<h1>account currencies</h1>'
+    const accounts = asafonov.accounts.getList()
     let isFirst = true
+    const accountRate = this.model.getItem('account_rate') || {}
     for (let i in accounts) {
       if (! isFirst) {
         this.accountRateScreen.appendChild(this._createUnderline())
       }
       this.accountRateScreen.appendChild(this._createLine(i, isFirst, async event => {
-        const accountRate = this.model.getItem('account_rate') || {}
+        const rate = accountRate[i] || this.model.getItem('default_currency')
         const isRateNeeded = currency.isRateNeeded(accountRate[i])
-        const newRate = prompt('Please enter the account rate', (accountRate[i] || await currency.initRate(accountRate[i])) + (isRateNeeded ? ` (${await currency.initRate(accountRate[i])})` : ''))
+        const newRate = prompt('Please enter the account currency', (rate || await currency.initRate(rate)) + (isRateNeeded ? ` (${await currency.initRate(rate)})` : ''))
         if (newRate) {
           accountRate[i] = currency.trim(newRate)
           this.model.updateItem('account_rate', accountRate)
@@ -1088,6 +1107,7 @@ class SettingsView {
   show() {
     this.showMainScreen()
     this.showDefaultAccountScreen()
+    this.showDefaultCurrencyScreen()
     this.showAccountRateScreen()
     this.showCategoriesScreen()
     this.showThemeScreen()
@@ -1306,6 +1326,8 @@ window.onerror = (msg, url, line) => {
   alert(`${msg} on line ${line}`)
 }
 document.addEventListener("DOMContentLoaded", function (event) {
+  localStorage.removeItem('currency_USD')
+
   function getPageName() {
     return document.querySelector('body').id || 'main_page'
   }
