@@ -7,7 +7,6 @@ Monly is an open source project, and your donations support the developer, your 
 Platform | Link
 --- | ---
 Yoomoney | [Donate](https://yoomoney.ru/to/41001650076246) |
-Bitcoin | 1JWPruZxtT9NwgkrRseeXBbM73ygh1rr3n | 
 
 Thank you!
 
