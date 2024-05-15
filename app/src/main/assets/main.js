@@ -161,7 +161,7 @@ class Currency {
     const t = cache.t || 0
     const now = new Date().getTime()
     if (t + 12 * 3600 * 1000 > now) {
-      return cache.rates[symbol]
+      return cache.rates ? cache.rates[symbol] : null
     }
     return null
   }
