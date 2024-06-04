@@ -153,7 +153,7 @@ class Budgets extends AbstractList {
 }
 class Currency {
   buildUrl (base) {
-    return `http://isengard.asafonov.org:8000/exchangerates/?base=${base}`
+    return `http://isengard.asafonov.org/exchangerates/?base=${base}`
   }
   getFromCache (base, symbol) {
     const k = `currency`
