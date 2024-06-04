@@ -1,1 +1,2 @@
-force update cache if currency rate value is missing
+* force update cache if currency rate value is missing
+* change currency rates api url
