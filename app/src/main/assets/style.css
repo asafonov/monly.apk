@@ -11,17 +11,17 @@
 }
 
 :root {
-  --size_s3: max(0.9vw, 0.9vh);   /* 6px */
-  --size_s2: max(1.5vw, 1.5vh);   /* 10px */
-  --size_s1: max(1.95vw, 1.95vh); /* 13px */
-  --size_0: max(2.4vw, 2.4vh);    /* 16px */
-  --size_1: max(3vw, 3vh);        /* 20px */
-  --size_2: max(3.75vw, 3.75vh);  /* 25px */
-  --size_3: max(4.65vw, 4.65vh);  /* 31px */
-  --size_4: max(6vw, 6vh);        /* 40px */
-  --size_chart: max(50vw, 50vh);
+  --size_s3: 1.8vw;   /* 6px */
+  --size_s2: 3vw;   /* 10px */
+  --size_s1: 3.9vw; /* 13px */
+  --size_0: 4.8vw;    /* 16px */
+  --size_1: 6vw;        /* 20px */
+  --size_2: 7.5vw;  /* 25px */
+  --size_3: 9.3vw;  /* 31px */
+  --size_4: 12vw;        /* 40px */
+  --size_chart: 100vw;
 
-  --border: max(0.15vw, 0.15vh);
+  --border: 0.3vw;
 
   /* colors */
   --main_green: #86AF49;
