@@ -904,7 +904,7 @@ class ReportsView {
     const total = Math.abs(subtotal)
     let totalFraction = 0
     const keys = Object.keys(data)
-    keys.sort((a, b) => Math.abs(data[a]) - Math.abs(data[b]))
+    keys.sort((a, b) => Math.abs(data[b]) - Math.abs(data[a]))
     for (let i = 0; i < keys.length; ++i) {
       const item = keys[i]
       if (! proceedFunction(data[item])) continue
