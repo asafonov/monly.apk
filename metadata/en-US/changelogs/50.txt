@@ -1,0 +1,1 @@
+fix app freeze in case of failed response from the currency convertion service

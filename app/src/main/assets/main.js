@@ -167,9 +167,15 @@ class Currency {
   }
   async getRates (base) {
     const url = this.buildUrl(base)
-    const response = await fetch(url)
-    const data = await response.json()
     const k = `currency`
+    const currentCache = JSON.parse(window.localStorage.getItem(k)) || {}
+    let data
+    try {
+      const response = await fetch(url)
+      data = await response.json() || currentCache.rates
+    } catch (e) {
+      data = currentCache.rates
+    }
     const cache = {
       t: new Date().getTime(),
       rates: data
