@@ -1,0 +1,2 @@
+* fix bug on assigning name for a new budget
+* fix bug when you can't hide budget view if some budgets added
