@@ -650,9 +650,9 @@ class BudgetsView {
     this.listElement = document.querySelector('.budgets')
     const settings = asafonov.settings
     const mainscreen = settings.getItem('mainscreen')
-    const isEnabled = mainscreen.budget
+    this.isEnabled = mainscreen.budget
     this.model = new Budgets()
-    if (! isEnabled) {
+    if (! this.isEnabled) {
       this.listElement.parentNode.removeChild(this.listElement)
       return
     }
@@ -682,8 +682,14 @@ class BudgetsView {
     asafonov.messageBus[add ? 'subscribe' : 'unsubscribe'](asafonov.events.TRANSACTION_UPDATED, this, 'onTransactionUpdated')
   }
   onAddButtonClicked() {
-    const name = 'Groceries'
-    this.model.updateItem(name, 0)
+    const list = this.model.getList()
+    for (let i = 0; i < this.categories.length; ++i) {
+      if (list[this.categories[i]] === undefined || list[this.categories[i]] === null) {
+        const name = this.categories[i]
+        this.model.updateItem(name, 0)
+        return
+      }
+    }
   }
   onBudgetUpdated (event) {
     this.renderItem(event.id, event.to)
@@ -813,6 +819,7 @@ class BudgetsView {
     this.model.updateItem(title, newValue)
   }
   updateList() {
+    if (! this.isEnabled) return
     this.clearExistingItems()
     const list = this.model.getList()
     for (let key in list) {
