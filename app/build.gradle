@@ -2,13 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 33
+    namespace 'org.asafonov.monly'
 
     defaultConfig {
         applicationId "org.asafonov.monly"
-        minSdkVersion 27
-        targetSdkVersion 33
-        versionCode 52
-        versionName "2.14"
+        minSdkVersion 29
+        targetSdkVersion 35
+        versionCode 53
+        versionName "2.15"
     }
     buildTypes {
         release {
